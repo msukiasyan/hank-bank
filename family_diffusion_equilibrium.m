@@ -10,9 +10,9 @@ delta = 0.1;  % Capital depreciation
 xi = 0.5; % adjustment cost elasticity
 a1 = 1/(1-xi)*delta^xi; % adjustment cost parameter 1
 theta = 0.5; %fraction of divertable assets 
-f = 0.02; % exit rate of banks
+f = 0.1; % exit rate of banks
 rho = 0.05;   % discount rate HH
-rhoB = 0.02;   % discount rate BANK
+rhoB = 0.05;   % discount rate BANK
 M_N = 0.01; % recapitalization rate
 ga = 1; % leave 1 for log utility
 
@@ -23,7 +23,7 @@ Corr = exp(-0.0);  % persistence -log(Corr)  O-U
 
 
 
-r_plus = 0.03;
+
 
 relax = 0.99; % relaxation parameter 
 J=20;         % number of z points 
@@ -91,10 +91,12 @@ end
 
 %Add up the upper, center, and lower diagonal into a sparse matrix
 Aswitch=spdiags(centdiag,0,I*J,I*J)+spdiags(lowdiag,-I,I*J,I*J)+spdiags(updiag,I,I*J,I*J);
-
+r_plus_max = f + M_N - 0.001;
 iter = 1;
+r_plus_vec = linspace(0.04529,0.045305,20);
 %MAIN LOOP
-
+for iter=1:20
+    r_plus = r_plus_vec(iter);
 disp('Main loop iteration')
 disp(iter)
 
@@ -211,8 +213,9 @@ v = log(w.*zz + XN + r_plus.*aa);
     B_plus = sum(g'*a*da*dz);
     disp(B_plus)
    
+err(iter) = (B_plus - (leverage-1)*N);
 
-
+end
 %GRAPHS 
 % 
 % % %SAVINGS POLICY FUNCTION
