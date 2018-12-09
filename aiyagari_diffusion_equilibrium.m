@@ -1,10 +1,4 @@
-%SIMULATES AN AIYAGARI ECONOMY WITH IDIOSYNCRATIC BROWNIAN MOTION
-%GALO NUNO, based on codes from BENJAMIN MOLL
-%Optimized for speed by SeHyoun Ahn
-%The algorithm is based on a relaxation scheme to find K. The value function is
-%found every round by solving the HJB equation through an upwind finite
-%differences scheme. The distribution is found by also solving using finite
-%differences the Fokker-Planck (Kolmogorov forward) equation
+% This file finds stationary equilibrium of HANK with Families
 clear all; close all; format long;
 tic;
 
