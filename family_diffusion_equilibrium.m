@@ -5,17 +5,26 @@ tic;
 
 %--------------------------------------------------
 %PARAMETERS
-ga = 2;       % CRRA utility with parameter gamma
 alpha = 0.35; % Production function F = K^alpha * L^(1-alpha) 
 delta = 0.1;  % Capital depreciation
+xi = 0.5; % adjustment cost elasticity
+a1 = 1/(1-xi)*delta^xi; % adjustment cost parameter 1
+theta = 0.5; %fraction of divertable assets 
+f = 0.02; % exit rate of banks
+rho = 0.05;   % discount rate HH
+rhoB = 0.05;   % discount rate BANK
+
+
 zmean = 1.0;      % mean O-U process (in levels). This parameter has to be adjusted to ensure that the mean of z (truncated gaussian) is 1.
 sig2 = (0.10)^2;  % sigma^2 O-U
 Corr = exp(-0.0);  % persistence -log(Corr)  O-U
-rho = 0.05;   % discount rate
+
+
+
 
 K = 3.8;      % initial aggregate capital. It is important to guess a value close to the solution for the algorithm to converge
 relax = 0.99; % relaxation parameter 
-J=40;         % number of z points 
+J=20;         % number of z points 
 zmin = 0.5;   % Range z
 zmax = 1.5;
 amin = 0;    % borrowing constraint
@@ -82,12 +91,15 @@ end
 Aswitch=spdiags(centdiag,0,I*J,I*J)+spdiags(lowdiag,-I,I*J,I*J)+spdiags(updiag,I,I*J,I*J);
 
 %----------------------------------------------------
-%INITIAL GUESS
+%INITIAL GUESS 
 r = alpha     * K^(alpha-1) -delta; %interest rates
 w = (1-alpha) * K^(alpha);          %wages
 v0 = (w*zz + r.*aa).^(1-ga)/(1-ga)/rho;
 v = v0;
 dist = zeros(1,maxit);
+
+qK = 1;
+
 
 %-----------------------------------------------------
 %MAIN LOOP
