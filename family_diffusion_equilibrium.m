@@ -12,8 +12,9 @@ a1 = 1/(1-xi)*delta^xi; % adjustment cost parameter 1
 theta = 0.5; %fraction of divertable assets 
 f = 0.02; % exit rate of banks
 rho = 0.05;   % discount rate HH
-rhoB = 0.05;   % discount rate BANK
-
+rhoB = 0.02;   % discount rate BANK
+M_N = 0.01; % recapitalization rate
+ga = 1; % leave 1 for log utility
 
 zmean = 1.0;      % mean O-U process (in levels). This parameter has to be adjusted to ensure that the mean of z (truncated gaussian) is 1.
 sig2 = (0.10)^2;  % sigma^2 O-U
@@ -22,7 +23,8 @@ Corr = exp(-0.0);  % persistence -log(Corr)  O-U
 
 
 
-K = 3.8;      % initial aggregate capital. It is important to guess a value close to the solution for the algorithm to converge
+r_plus = 0.03;
+
 relax = 0.99; % relaxation parameter 
 J=20;         % number of z points 
 zmin = 0.5;   % Range z
@@ -33,9 +35,9 @@ I=100;        % number of a points
 
 %simulation parameters
 maxit  = 100;     %maximum number of iterations in the HJB loop
-maxitK = 100;    %maximum number of iterations in the K loop
+maxitr_plus = 100;    %maximum number of iterations in the r_plus loop
 crit = 10^(-6); %criterion HJB loop
-critK = 1e-5;   %criterion K loop
+critr_plus = 1e-5;   %criterion r_plus loop
 Delta = 1000;   %delta in HJB algorithm
 
 %ORNSTEIN-UHLENBECK IN LEVELS
@@ -90,43 +92,45 @@ end
 %Add up the upper, center, and lower diagonal into a sparse matrix
 Aswitch=spdiags(centdiag,0,I*J,I*J)+spdiags(lowdiag,-I,I*J,I*J)+spdiags(updiag,I,I*J,I*J);
 
-%----------------------------------------------------
-%INITIAL GUESS 
-r = alpha     * K^(alpha-1) -delta; %interest rates
-w = (1-alpha) * K^(alpha);          %wages
-v0 = (w*zz + r.*aa).^(1-ga)/(1-ga)/rho;
-v = v0;
-dist = zeros(1,maxit);
-
-qK = 1;
-
-
-%-----------------------------------------------------
+iter = 1;
 %MAIN LOOP
-for iter=1:maxitK
+
 disp('Main loop iteration')
 disp(iter)
+
+% SOLVE THE BANKING SECTOR
+
+lambda = max(f - r_plus - M_N,0);
+alpha_hat = f/(rhoB + f - r_plus - lambda);
+r_minus = lambda*theta/alpha_hat + r_plus;
+K = (alpha/(r_minus + delta))^(1/(1-alpha));
+w = (1-alpha)*K^alpha;
+leverage = alpha_hat/theta;
+N = K/leverage;
+XN = f*N - M_N*N;
+v = log(w.*zz + XN + r_plus.*aa);
+
 
         % HAMILTON-JACOBI-BELLMAN EQUATION %
     for n=1:maxit
         V = v;
         % forward difference
         Vaf(1:I-1,:) = (V(2:I,:)-V(1:I-1,:))/da;
-        Vaf(I,:) = (w*z + r.*amax).^(-ga); %will never be used, but impose state constraint a<=amax just in case
+        Vaf(I,:) = (w*z + r_plus.*amax + XN).^(-ga); %will never be used, but impose state constraint a<=amax just in case
         % backward difference
         Vab(2:I,:) = (V(2:I,:)-V(1:I-1,:))/da;
-        Vab(1,:) = (w*z + r.*amin).^(-ga);  %state constraint boundary condition
+        Vab(1,:) = (w*z + r_plus.*amin + XN).^(-ga);  %state constraint boundary condition
 
         I_concave = Vab > Vaf;              %indicator whether value function is concave (problems arise if this is not the case)
 
         %consumption and savings with forward difference
         cf = Vaf.^(-1/ga);
-        sf = w*zz + r.*aa - cf;
+        sf = w*zz + r_plus.*aa - cf + XN;
         %consumption and savings with backward difference
         cb = Vab.^(-1/ga);
-        sb = w*zz + r.*aa - cb;
+        sb = w*zz + r_plus.*aa - cb + XN;
         %consumption and derivative of value function at steady state
-        c0 = w*zz + r.*aa;
+        c0 = w*zz + r_plus.*aa + XN;
         Va0 = c0.^(-ga);
 
         % dV_upwind makes a choice of forward or backward differences based on
@@ -141,8 +145,8 @@ disp(iter)
 
         Va_Upwind = Vaf.*If + Vab.*Ib + Va0.*I0; %important to include third term
 
-        c = Va_Upwind.^(-1/ga);
-        u = c.^(1-ga)/(1-ga);
+        c = Va_Upwind.^(-1);
+        u = log(c);
 
         %CONSTRUCT MATRIX A
         X = - min(sb,0)/da;
@@ -204,47 +208,38 @@ disp(iter)
     g = reshape(gg,I,J);
     
     % Update aggregate capital
-    S = sum(g'*a*da*dz);
-    disp(S)
+    B_plus = sum(g'*a*da*dz);
+    disp(B_plus)
    
-    clear A AA AT B
-    if abs(K-S)<critK
-        break
-    end
-    
-    %update prices
-    K = relax*K +(1-relax)*S;           %relaxation algorithm (to ensure convergence)
-    r = alpha     * K^(alpha-1) -delta; %interest rates
-    w = (1-alpha) * K^(alpha);          %wages
- 
-end
+
+
 %GRAPHS 
-
-% %SAVINGS POLICY FUNCTION
-figure
-ss = w*zz + r.*aa - c;
-icut = 50;
-acut = a(1:icut);
-sscut = ss(1:icut,:);
-set(gca,'FontSize',14)
-surf(acut,z,sscut')
-view([45 25])
-xlabel('Wealth, $a$','FontSize',14,'interpreter','latex')
-ylabel('Productivity, $z$','FontSize',14,'interpreter','latex')
-zlabel('Savings $s(a,z)$','FontSize',14,'interpreter','latex')
-xlim([amin max(acut)])
-ylim([zmin zmax])
-
-%WEALTH DISTRIBUTION
-figure
-icut = 50;
-acut = a(1:icut);
-gcut = g(1:icut,:);
-set(gca,'FontSize',14)
-surf(acut,z,gcut')
-view([45 25])
-xlabel('Wealth, $a$','FontSize',14,'interpreter','latex')
-ylabel('Productivity, $z$','FontSize',14,'interpreter','latex')
-zlabel('Density $f(a,z)$','FontSize',14,'interpreter','latex')
-xlim([amin max(acut)])
-ylim([zmin zmax])
+% 
+% % %SAVINGS POLICY FUNCTION
+% figure
+% ss = w*zz + r.*aa - c;
+% icut = 50;
+% acut = a(1:icut);
+% sscut = ss(1:icut,:);
+% set(gca,'FontSize',14)
+% surf(acut,z,sscut')
+% view([45 25])
+% xlabel('Wealth, $a$','FontSize',14,'interpreter','latex')
+% ylabel('Productivity, $z$','FontSize',14,'interpreter','latex')
+% zlabel('Savings $s(a,z)$','FontSize',14,'interpreter','latex')
+% xlim([amin max(acut)])
+% ylim([zmin zmax])
+% 
+% %WEALTH DISTRIBUTION
+% figure
+% icut = 50;
+% acut = a(1:icut);
+% gcut = g(1:icut,:);
+% set(gca,'FontSize',14)
+% surf(acut,z,gcut')
+% view([45 25])
+% xlabel('Wealth, $a$','FontSize',14,'interpreter','latex')
+% ylabel('Productivity, $z$','FontSize',14,'interpreter','latex')
+% zlabel('Density $f(a,z)$','FontSize',14,'interpreter','latex')
+% xlim([amin max(acut)])
+% ylim([zmin zmax])
