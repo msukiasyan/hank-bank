@@ -53,9 +53,11 @@ dz2 = dz^2;
 mass = ones(1,P)/P;
 ownership = linspace(0,3,P)./(sum(linspace(0,3,P).*mass));
 ownership = reshape(ownership,[1,1,P]);
+mass_vec = reshape(repmat(mass,I*J,1),[I*J*P,1])
 mass = reshape(mass,[1,1,P]);
 ownership = repmat(ownership,[I,J]);
 mass = repmat(mass,[I,J]);
+
 aaa = a.*ones(1,J,P);
 zzz = ones(I,1,P).*z;
 
