@@ -32,12 +32,10 @@ zmax = 1.5;
 amin = 0;    % borrowing constraint
 amax = 30;    % range a
 I=100;        % number of a points 
+P = 10;       % number of points in the ownership distribution
 
 %simulation parameters
 maxit  = 100;     %maximum number of iterations in the HJB loop
-maxitr_plus = 100;    %maximum number of iterations in the r_plus loop
-crit = 10^(-6); %criterion HJB loop
-critr_plus = 1e-5;   %criterion r_plus loop
 Delta = 1000;   %delta in HJB algorithm
 
 %ORNSTEIN-UHLENBECK IN LEVELS
@@ -51,19 +49,26 @@ da = (amax-amin)/(I-1);
 z = linspace(zmin,zmax,J);   % productivity vector
 dz = (zmax-zmin)/(J-1);
 dz2 = dz^2;
-aa = a*ones(1,J);
-zz = ones(I,1)*z;
+
+mass = ones(1,P)/P;
+ownership = linspace(0,3,P)./(sum(linspace(0,3,P).*mass));
+ownership = reshape(ownership,[1,1,P]);
+mass = reshape(mass,[1,1,P]);
+ownership = repmat(ownership,[I,J]);
+mass = repmat(mass,[I,J]);
+aaa = a.*ones(1,J,P);
+zzz = ones(I,1,P).*z;
 
 mu = the*(zmean - z);        %DRIFT (FROM ITO'S LEMMA)
-s2 = sig2.*ones(1,J);        %VARIANCE (FROM ITO'S LEMMA)
+s2 = sig2.*ones(1,J,P);        %VARIANCE (FROM ITO'S LEMMA)
 
 %Finite difference approximation of the partial derivatives
-Vaf = zeros(I,J);             
-Vab = zeros(I,J);
-Vzf = zeros(I,J);
-Vzb = zeros(I,J);
-Vzz = zeros(I,J);
-c = zeros(I,J);
+Vaf = zeros(I,J,P);             
+Vab = zeros(I,J,P);
+Vzf = zeros(I,J,P);
+Vzb = zeros(I,J,P);
+Vzz = zeros(I,J,P);
+c = zeros(I,J,P);
 
 %CONSTRUCT MATRIX Aswitch SUMMARIZING EVOLUTION OF z
 yy = - s2/dz2 - mu/dz;
