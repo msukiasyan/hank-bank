@@ -1,5 +1,5 @@
 global alpha delta xi a1 theta f rho rhoB M_N ga
-alpha = 0.35; % Production function F = K^alpha * L^(1-alpha) 
+alpha = 0.3; % Production function F = K^alpha * L^(1-alpha) 
 delta = 0.1;  % Capital depreciation
 xi = 0.5; % adjustment cost elasticity
 a1 = 1/(1-xi)*delta^xi; % adjustment cost parameter 1

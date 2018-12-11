@@ -10,7 +10,7 @@ set_grids;
 
 global r_plus_ss kappa_ss r_minus_ss K_ss N_ss B_plus_ss B_minus_ss alpha_hat_ss...
         lambda_ss XN_ss V_ss g_ss leverage_ss 
-out = fsolve(@steady_state,[0.03;-1])
+out = fsolve(@steady_state,[0.03;-2])
 
 % %
 % % %SAVINGS POLICY FUNCTION

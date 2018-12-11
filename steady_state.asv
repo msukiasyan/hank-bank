@@ -1,17 +1,21 @@
 % return residuals of equilibrium conditions
-function [r_plus_ss,kappa_ss,r_minus_ss,K_ss, N_ss,...
-    B_plus_ss, B_minus_ss, alpha_hat_ss, lambda_ss, XN_ss, V_ss, g_ss, leverage_ss] = steady_state(inp)
+function [residual] = steady_state(inp)
 
 global alpha delta xi a1 theta f rho rhoB M_N ga
-global Aswitch
-global J zmin zmax amin amax I crit Delta the Var a z da dz aa zz mu s2 zmean sig2 Corr maxit P
+global Aswitch zzz aaa
+global J zmin zmax amin amax I crit Delta the Var a z da dz aa zz mu s2 zmean sig2 Corr maxit P ownership mass
 
 % load inputs
 r_plus = inp(1);
 kappa = exp(inp(2))/(1+exp(inp(2)));
 
 
-
+Vaf = zeros(I,J,P);             
+Vab = zeros(I,J,P);
+Vzf = zeros(I,J,P);
+Vzb = zeros(I,J,P);
+Vzz = zeros(I,J,P);
+c = zeros(I,J,P);
 
 %% Aggregate equations %%
 
@@ -22,11 +26,12 @@ K = (alpha/(r_minus + delta))^(1/(1-alpha)); %capital
 w = (1-alpha)*K^alpha; %real wage
 leverage = alpha_hat/theta; %leverage
 N = K/(kappa*leverage); %recover net worth 
+
 XN = f*N - M_N*N; %aggregate dividend
 dividends = ownership*XN; %individual dividends
-v = log(w.*zzz + dividends + r_plus.*aaa);
-r = r_plus*(aaa>=0) + r_minus*(aaa<0);
 
+r = r_plus*(aaa>=0) + r_minus*(aaa<0);
+v = log(w.*zzz + dividends + r.*aaa);
 %%  HAMILTON-JACOBI-BELLMAN EQUATION %%
     for n=1:maxit
         V = v;
@@ -35,7 +40,7 @@ r = r_plus*(aaa>=0) + r_minus*(aaa<0);
         Vaf(I,:,:) = (w*z + r(I,:,:).*amax + dividends(I,:,:)).^(-ga); %will never be used, but impose state constraint a<=amax just in case
         % backward difference
         Vab(2:I,:,:) = (V(2:I,:,:)-V(1:I-1,:,:))/da;
-        Vab(1,:,:) = (w*z + r(I,:,:).*amin +dividends(I,:,:)).^(-ga);  %state constraint boundary condition
+        Vab(1,:,:) = (w*z + r(1,:,:).*amin +dividends(1,:,:)).^(-ga);  %state constraint boundary condition
 
         I_concave = Vab > Vaf;              %indicator whether value function is concave (problems arise if this is not the case)
 
@@ -136,14 +141,16 @@ r = r_plus*(aaa>=0) + r_minus*(aaa<0);
     g(:,:,p) = reshape(gg,I,J);
     end
 
-    B_plus =  sum(sum(sum(g.*aaa*da*dz.*mass)));
+    B_plus =  sum(sum(sum(g.*(g>=0).*aaa*da*dz.*mass)));
+    %%B_minus =  sum(sum(sum(-g.*(g<0).*aaa*da*dz.*mass)));
 %% RESIDUAL EQUATIONS
     residual(1) = B_plus - (leverage-1)*N;
-    residual(2) = B_minus + K - leverage * N;
-    
- 
-    %% SAVE RESULTS
-    
+    %residual(2) =B_minus + K - leverage * N;
+    resdual(2) = kappa*leverage*N - K;
+    B_minus = leverag
+%% SAVE RESULTS
+    global r_plus_ss kappa_ss r_minus_ss K_ss N_ss B_plus_ss B_minus_ss alpha_hat_ss...
+        lambda_ss XN_ss V_ss g_ss leverage_ss 
     r_plus_ss=r_plus;
     kappa_ss=kappa;
     r_minus_ss=r_minus;

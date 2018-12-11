@@ -5,7 +5,7 @@ global J zmin zmax amin amax I crit Delta the Var a z da dz aa zz mu s2 zmean si
 J=20;         % number of z points 
 zmin = 0.5;   % Range z
 zmax = 1.5;
-amin = -0.5;    % borrowing constraint
+amin = -0.1;    % borrowing constraint
 amax = 30;    % range a
 I=100;        % number of a points 
 P = 10;       % number of points in the ownership distribution 

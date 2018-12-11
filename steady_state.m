@@ -141,13 +141,12 @@ v = log(w.*zzz + dividends + r.*aaa);
     g(:,:,p) = reshape(gg,I,J);
     end
 
-    B_plus =  sum(sum(sum(g.*(g>=0).*aaa*da*dz.*mass)));
-    B_minus =  sum(sum(sum(-g.*(g<0).*aaa*da*dz.*mass)));
+    B_plus =  sum(sum(sum(g.*max(aaa,0).*da.*dz.*mass)));
+    B_minus = -sum(sum(sum(g.*min(aaa,0).*da.*dz.*mass)));
 %% RESIDUAL EQUATIONS
     residual(1) = B_plus - (leverage-1)*N;
     residual(2) =B_minus + K - leverage * N;
-    
- 
+
 %% SAVE RESULTS
     global r_plus_ss kappa_ss r_minus_ss K_ss N_ss B_plus_ss B_minus_ss alpha_hat_ss...
         lambda_ss XN_ss V_ss g_ss leverage_ss 
