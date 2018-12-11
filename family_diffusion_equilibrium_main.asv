@@ -1,0 +1,43 @@
+% This file finds stationary equilibrium of HANK with Families
+
+clear all; close all; format long;
+tic;
+
+%--------------------------------------------------
+%
+set_parameters;
+set_grids;
+
+
+[residual] = steady_state(guess)
+fsolve(@(x)steady_state,[0.01,0])
+
+% %
+% % %SAVINGS POLICY FUNCTION
+% figure
+% ss = w*zz + r.*aa - c;
+% icut = 50;
+% acut = a(1:icut);
+% sscut = ss(1:icut,:);
+% set(gca,'FontSize',14)
+% surf(acut,z,sscut')
+% view([45 25])
+% xlabel('Wealth, $a$','FontSize',14,'interpreter','latex')
+% ylabel('Productivity, $z$','FontSize',14,'interpreter','latex')
+% zlabel('Savings $s(a,z)$','FontSize',14,'interpreter','latex')
+% xlim([amin max(acut)])
+% ylim([zmin zmax])
+% 
+% %WEALTH DISTRIBUTION
+% figure
+% icut = 50;
+% acut = a(1:icut);
+% gcut = g(1:icut,:);
+% set(gca,'FontSize',14)
+% surf(acut,z,gcut')
+% view([45 25])
+% xlabel('Wealth, $a$','FontSize',14,'interpreter','latex')
+% ylabel('Productivity, $z$','FontSize',14,'interpreter','latex')
+% zlabel('Density $f(a,z)$','FontSize',14,'interpreter','latex')
+% xlim([amin max(acut)])
+% ylim([zmin zmax])
