@@ -1,13 +1,14 @@
 % return residuals of equilibrium conditions
-function [residual] = steady_state(inp)
+function [residual] = steady_state_N(inp)
 
-global alpha delta xi a1 theta f rho rhoB M_N ga
+global alpha delta xi a1 theta f rho rhoB M ga
 global Aswitch zzz aaa
 global J zmin zmax amin amax I crit Delta the Var a z da dz aa zz mu s2 zmean sig2 Corr maxit P ownership mass
 
 % load inputs
 r_plus = inp(1);
 kappa = exp(inp(2))/(1+exp(inp(2)));
+N = exp(inp(3));
 
 
 Vaf = zeros(I,J,P);             
@@ -19,13 +20,14 @@ c = zeros(I,J,P);
 
 %% Aggregate equations %%
 
+M_N = M/N;
 lambda = max(f - r_plus - M_N,0); %multiplier on the budget constraint 
 alpha_hat = f/(rhoB + f - r_plus - lambda); %marginal value of net worth
 r_minus = lambda*theta/alpha_hat + r_plus; %interest on loans
 K = (alpha/(r_minus + delta))^(1/(1-alpha)); %capital
 w = (1-alpha)*K^alpha; %real wage
 leverage = alpha_hat/theta; %leverage
-N = K/(kappa*leverage); %recover net worth 
+
 
 XN = f*N - M_N*N; %aggregate dividend
 dividends = ownership*XN; %individual dividends
@@ -141,13 +143,13 @@ v = log(w.*zzz + dividends + r.*aaa);
     g(:,:,p) = reshape(gg,I,J);
     end
 
-    B_plus =  sum(sum(sum(g.*(g>=0).*aaa*da*dz.*mass)));
-    %%B_minus =  sum(sum(sum(-g.*(g<0).*aaa*da*dz.*mass)));
+    B_plus =  sum(sum(sum(g.*max(aaa,0).*da.*dz.*mass)));
+    B_minus = -sum(sum(sum(g.*min(aaa,0).*da.*dz.*mass)));
 %% RESIDUAL EQUATIONS
     residual(1) = B_plus - (leverage-1)*N;
-    %residual(2) =B_minus + K - leverage * N;
-    resdual(2) = kappa*leverage*N - K;
-    B_minus = leverag
+    residual(2) =B_minus + K - leverage * N;
+    residual(3) = N - K/(kappa*leverage); 
+
 %% SAVE RESULTS
     global r_plus_ss kappa_ss r_minus_ss K_ss N_ss B_plus_ss B_minus_ss alpha_hat_ss...
         lambda_ss XN_ss V_ss g_ss leverage_ss 

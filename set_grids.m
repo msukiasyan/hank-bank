@@ -13,7 +13,14 @@ P = 10;       % number of points in the ownership distribution
 % ownership distribution
 global mass ownership
 mass = ones(1,P)/P; % specify mass of each point
-ownership = linspace(0,1,P)./(sum(linspace(0,1,P).*mass)); %specify ownership distribution
+
+% this section sets mass and ownership by hand
+P = 2;
+mass=[0.99;0.01];
+ownership = [1;1];
+
+% this ends 
+%ownership = linspace(0,5,P)./(sum(linspace(0,5,P).*mass)); %specify ownership distribution
 ownership = reshape(ownership,[1,1,P]); %reshaping...
 mass_vec = reshape(repmat(mass,I*J,1),[I*J*P,1]); 
 mass = reshape(mass,[1,1,P]);
