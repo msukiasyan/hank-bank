@@ -7,21 +7,31 @@ tic;
 %
 set_parameters;
 set_grids;
-
-
-n_v = 2;              % number of jump variables
-n_g = 2;              % number of endogeneous state variables
-n_p = 3;              % number of static relations
-n_shocks = 2;           % 
-nEErrors = n_v;
-nVars = n_v + n_g + n_p;
-
-nVars =  n_v + n_g + n_p;
-nEErrors = n_v;
-
 global r_plus_ss kappa_ss r_minus_ss K_ss N_ss B_plus_ss B_minus_ss alpha_hat_ss...
         lambda_ss XN_ss V_ss g_ss leverage_ss 
+global varsSS n_v n_g n_p n_shocks nEErrors nVars
+
+n_v = I*J*P;              % number of jump variables
+n_g = I*J*P;              % number of endogeneous state variables
+n_p = 4;              % number of static relations 
+n_shocks = 1;           % 
+nEErrors = n_v+2;
+nVars = n_v + n_g + n_p;
+
+
+
+
 out = fsolve(@steady_state_N,[0.03;-2;1])
+
+% prepare steady state variables
+varsSS(1:I*J*P) = reshape(V_ss,[I*J*P,1]);
+varsSS(n_v+1:n_v+I*J*P) = reshape(g_ss,[I*J*P,1]);
+varsSS(2*I*J*P+1) = alpha_hat_ss;
+varsSS(2*I*J*P+2) = N_ss;
+varsSS(2*I*J*P+3) = K_ss;
+varsSS(2*I*J*P+4) = r_plus_ss;
+varsSS = reshape(varsSS,[nVars,1]);
+
 
 %% Step 2: Linearize Model Equations
 
@@ -32,12 +42,14 @@ t0 = tic;
 % Prepare automatic differentiation
 vars = zeros(nVars + nVars + nEErrors + n_shocks,1);
 vars = myAD(vars);
+resids = equilibrium_conditions_N_noQ(vars);
+
+
 
 % Evaluate derivatives
-equilibrium_conditions_N;
 
 % Extract derivative values
-derivs = getderivs(v_residual);
+derivs = getderivs(resids);
 
 t_derivs = toc(t0);
 fprintf('Time to compute derivatives: %2.4f seconds\n\n\n',t_derivs);
@@ -49,17 +61,17 @@ end
 
 % %% Step 3: Solve out Static Constraints or Reduce the Model
 % % Extract derivatives
-% g1 = -derivs(:,1:nVars);
-% g0 = derivs(:,nVars+1:2*nVars);
-% pi = -derivs(:,2*nVars+1:2*nVars+nEErrors);
-% psi = -derivs(:,2*nVars+nEErrors+1:2*nVars+nEErrors+n_shocks);
-% constant = sparse(nVars,1);
+g1 = -derivs(:,1:nVars);
+g0 = derivs(:,nVars+1:2*nVars);
+pi = -derivs(:,2*nVars+1:2*nVars+nEErrors);
+psi = -derivs(:,2*nVars+nEErrors+1:2*nVars+nEErrors+n_shocks);
+constant = sparse(nVars,1);
 % 
 % % State Variables
 %     % Solve out static constraints
-%     fprintf('Solving Out Static Constraints ...\n');
-%     [state_red,inv_state_red,g0,g1,constant,pi,psi] = clean_G0_sparse(g0,g1,constant,pi,psi);
-%     n_g_red = n_g;
+    fprintf('Solving Out Static Constraints ...\n');
+    [state_red,inv_state_red,g0,g1,constant,pi,psi] = clean_G0_sparse(g0,g1,constant,pi,1);
+    n_g_red = n_g;
 % 
 %     % Create identity matrix for code reuse below
 %     from_spline = speye(n_g_red + n_v);

@@ -2,23 +2,25 @@
 %This file creates all grids needed to solve the model
 
 global J zmin zmax amin amax I crit Delta the Var a z da dz aa zz mu s2 zmean sig2 Corr maxit P aaa zzz
-J=20;         % number of z points 
-zmin = 0.5;   % Range z
-zmax = 1.5;
+J=5;         % number of z points 
+zmin = 0.7;   % Range z
+zmax = 1.3;
 amin = -0.1;    % borrowing constraint
 amax = 30;    % range a
 I=100;        % number of a points 
-P = 10;       % number of points in the ownership distribution 
+P = 1;       % number of points in the ownership distribution 
 
 % ownership distribution
 global mass ownership
 mass = ones(1,P)/P; % specify mass of each point
 
 % this section sets mass and ownership by hand
-P = 2;
-mass=[0.99;0.01];
-ownership = [1;1];
-
+P = 1;
+%mass=[0.99;0.01];
+%ownership = [1;1];
+P = 1;
+mass = 1;
+ownership = 1;
 % this ends 
 %ownership = linspace(0,5,P)./(sum(linspace(0,5,P).*mass)); %specify ownership distribution
 ownership = reshape(ownership,[1,1,P]); %reshaping...
@@ -34,7 +36,7 @@ Corr = exp(-0.0);  % persistence -log(Corr)  O-U
 %simulation parameters
 maxit  = 100;     %maximum number of iterations in the HJB loop
 
-crit = 10^(-6); %criterion HJB loop
+crit = 10^(-10); %criterion HJB loop
 Delta = 1000;   %delta in HJB algorithm
 
 %ORNSTEIN-UHLENBECK IN LEVELS

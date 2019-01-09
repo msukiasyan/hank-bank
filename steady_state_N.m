@@ -138,13 +138,14 @@ v = log(w.*zzz + dividends + r.*aaa);
 
     %Solve linear system
     gg = ATemp\b;
-    g_sum = gg'*ones(I*J,1)*da*dz*mass(p);
+    g_sum = gg'*ones(I*J,1);
     gg = gg./g_sum;
-    g(:,:,p) = reshape(gg,I,J);
+    g(:,:,p) = reshape(gg,I,J)*mass(1,1,p);
+    
     end
 
-    B_plus =  sum(sum(sum(g.*max(aaa,0).*da.*dz.*mass)));
-    B_minus = -sum(sum(sum(g.*min(aaa,0).*da.*dz.*mass)));
+    B_plus =  sum(sum(sum(g.*max(aaa,0))));
+    B_minus = -sum(sum(sum(g.*min(aaa,0))));
 %% RESIDUAL EQUATIONS
     residual(1) = B_plus - (leverage-1)*N;
     residual(2) =B_minus + K - leverage * N;
