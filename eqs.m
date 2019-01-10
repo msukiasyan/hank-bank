@@ -1,18 +1,20 @@
-function rs = eqs(pars)
-    global Nz a b da db
+function rs = eqs(options, params, inp)
+    params.r_minus  = inp(1);
+    params.r_F      = inp(2);
+    params  = get_all_params(options, params);
+    [cpol, dpol, bpol, apol, dst] = get_policies(options, params);
 
-    [cpol, dpol, bpol, apol, dst] = get_policies(pars(1), pars(2));
-    TL = 0;
-    TK = 0;
+    ldist   = zeros(params.Nz, 1);
+    ldist   = sum(dst(:, :, 1), 2) * params.da;
 
-    for nz = 1:Nz
-        TL = TL + sum(dst(:, :, nz), 2)' * b * db * da;
-    end
+    ildist  = zeros(params.Nz, 1);
+    ildist  = sum(dst(:, :, 1), 1) * params.db;
 
-    for nz = 1:Nz
-        TK = TK + sum(dst(:, :, nz), 1) * a' * da * db;
-    end
+    TD      = ldist' * max(params.b, 0) * params.db;        % Total liquid deposits
+    TB      = ldist' * max(-params.b, 0) * params.db;       % Total liquid borrowing
+    TS      = ildist * params.a' * params.da;               % Total illiquid assets
+    NW      = TS;                                           % Net worth = Total illiquid assets
 
-    rs(1) = TL;
-    rs(2) = TK - pars(1);
+    rs(1)   = TB - params.x_a * NW + params.K;
+    rs(2)   = TD - params.x_a * NW + NW;
 end

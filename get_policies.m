@@ -1,12 +1,38 @@
-function [cpol, dpol, bpol, apol, dst] = get_policies(ra_guess, rb_guess, rd_guess)
-    global chi0 chi1 ga rho xi rb_spread Aprod alp delt I J crit da db a b Nz bmin amax z la_mat w
-    global Delta maxit bmax amin
+function [cpol, dpol, bpol, apol, dst] = get_policies(options, params)
+
+    %% Unpack
+    chi0        = params.chi0;
+    chi1        = params.chi1;
+    ga          = params.ga;
+    rho         = params.rho; 
+    xi          = params.xi;
+    Aprod       = params.Aprod;
+    alp         = params.alp;
+    delt        = params.delt;
+    I           = params.I;
+    J           = params.J;
+    da          = params.da;
+    db          = params.db;
+    a           = params.a;
+    b           = params.b;
+    Nz          = params.Nz;
+    bmin        = params.bmin;
+    amax        = params.amax;
+    z           = params.z;
+    la_mat      = params.la_mat;
+    w           = params.w;
+    bmax        = params.bmax;
+    amin        = params.amin;
     
-    ra = ra_guess;
-    rb_pos = rd_guess;
-    %ra = 0.0;
-    %rb_pos = prod_prime(K_guess) - delt;
-    rb_neg = rb_guess;
+    crit        = options.crit;
+    Delta       = options.Delta;
+    maxit       = options.maxit;
+    
+    %% Solve
+    
+    ra          = params.r_F;
+    rb_pos      = params.r_plus;
+    rb_neg      = params.r_minus;
 
     if ra - 1/chi1 > 0
         disp('Warning: ra - 1/chi1 > 0')
@@ -75,12 +101,12 @@ function [cpol, dpol, bpol, apol, dst] = get_policies(ra_guess, rb_guess, rd_gue
         %useful quantities
         c_B = max(VbB,10^(-6)).^(-1/ga);
         c_F = max(VbF,10^(-6)).^(-1/ga);
-        dBB = two_asset_kinked_FOC(VaB,VbB,aaa);
-        dFB = two_asset_kinked_FOC(VaB,VbF,aaa);
+        dBB = two_asset_kinked_FOC(VaB,VbB,aaa,options,params);
+        dFB = two_asset_kinked_FOC(VaB,VbF,aaa,options,params);
         %VaF(:,J,:) = VbB(:,J,:).*(1-ra.*chi1 - chi1*w*zzz(:,J,:)./a(:,J,:));
-        dBF = two_asset_kinked_FOC(VaF,VbB,aaa);
+        dBF = two_asset_kinked_FOC(VaF,VbB,aaa,options,params);
         %VaF(:,J,:) = VbF(:,J,:).*(1-ra.*chi1 - chi1*w*zzz(:,J,:)./a(:,J,:));
-        dFF = two_asset_kinked_FOC(VaF,VbF,aaa);
+        dFF = two_asset_kinked_FOC(VaF,VbF,aaa,options,params);
 
         %UPWIND SCHEME
         d_B = (dBF>0).*dBF + (dBB<0).*dBB;
@@ -90,7 +116,7 @@ function [cpol, dpol, bpol, apol, dst] = get_policies(ra_guess, rb_guess, rd_gue
         d_B(1,1,:)=max(d_B(1,1,:),0);
         %split drift of b and upwind separately
         sc_B = (1-xi)*w*zzz + Rb.*bbb - c_B;
-        sd_B = (-d_B - two_asset_kinked_cost(d_B,aaa));
+        sd_B = (-d_B - two_asset_kinked_cost(d_B,aaa,options,params));
 
         d_F = (dFF>0).*dFF + (dFB<0).*dFB;
         %state constraints at amin and amax
@@ -99,7 +125,7 @@ function [cpol, dpol, bpol, apol, dst] = get_policies(ra_guess, rb_guess, rd_gue
 
         %split drift of b and upwind separately
         sc_F = (1-xi)*w*zzz + Rb.*bbb - c_F;
-        sd_F = (-d_F - two_asset_kinked_cost(d_F,aaa));
+        sd_F = (-d_F - two_asset_kinked_cost(d_F,aaa,options,params));
         sd_F(I,:,:) = min(sd_F(I,:,:),0);
 
         Ic_B = (sc_B < -10^(-12));
@@ -205,7 +231,7 @@ function [cpol, dpol, bpol, apol, dst] = get_policies(ra_guess, rb_guess, rd_gue
         ab_dist(:,:,n) = max(abs(Vchange),[],3);
 
         dist(n) = max(max(max(abs(Vchange))));
-        %disp(['Value Function, Iteration ' int2str(n) ', max Vchange = ' num2str(dist(n))]);
+        disp(['Value Function, Iteration ' int2str(n) ', max Vchange = ' num2str(dist(n))]);
         if dist(n)<crit
             disp('Value Function Converged, Iteration = ')
             disp(n)
@@ -216,10 +242,10 @@ function [cpol, dpol, bpol, apol, dst] = get_policies(ra_guess, rb_guess, rd_gue
 
     d = Id_B.*d_B + Id_F.*d_F;
     m = d + xi*w*zzz + Ra.*aaa;
-    s = (1-xi)*w*zzz + Rb.*bbb - d - two_asset_kinked_cost(d,aaa) - c;
+    s = (1-xi)*w*zzz + Rb.*bbb - d - two_asset_kinked_cost(d,aaa,options,params) - c;
 
     sc = (1-xi)*w*zzz + Rb.*bbb - c;
-    sd = - d - two_asset_kinked_cost(d,aaa);
+    sd = - d - two_asset_kinked_cost(d,aaa,options,params);
     
     cpol = c;
     dpol = d;

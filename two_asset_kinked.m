@@ -1,71 +1,71 @@
 clear all; close all; clc;
-global chi0 chi1 ga rho xi rb_spread Aprod alp delt I J crit da db a b Nz bmin amax z la_mat w
-global Delta maxit bmax amin
-global rho_bank f_bank theta_bank
-ga = 2; %CRRA utility with parameter gamma
-rho = 0.06; %discount rate
-chi0 = 0.03;%0.01;
-chi1 = 2.0;
-xi = 0.1; %fraction of income that is automatically deposited
-rb_spread = 0.025;
-Aprod = 1.0;
-alp = 0.4;
-delt = 0.05;
 
-rho_bank    = -log(0.96);
-f_bank      = 0.05;
-theta_bank  = 0.19;
+%% Setup
+params.ga           = 2;                % CRRA utility with parameter gamma
+params.rho          = 0.07;             % discount rate
+params.chi0         = 0.1;              % 0.01;
+params.chi1         = 2.0;
+params.xi           = 0.1;              % fraction of income that is automatically deposited
+params.Aprod        = 1.0;
+params.alp          = 0.4;
+params.delt         = 0.05;
+params.rho_bank     = -log(0.96);
+params.f_bank       = 0.05;
+params.theta_bank   = 0.19;
 
 %Income process (two-state Poisson process):
-w = 4;
-Nz = 2;
-z      = [.8,1.3];
-%z      = [.7,1.4];
-la_mat = [-1/3, 1/3; 1/3, -1/3];
+params.Nz           = 2;
+params.z            = [.5,1.5];          
+params.la_mat       = [-1/2, 1/2; 1/2, -1/2];
 
-crit = 10^(-5);
-Delta = 100;
-maxit = 35;
+options.crit        = 10^(-5);
+options.Delta       = 100;
+options.maxit       = 35;
 
-%grids
-I = 500;
-bmin = -2;
-%bmin = 0;
-bmax = 47.9;
-b = linspace(bmin,bmax,I)';
-db = (bmax-bmin)/(I-1);
+params.r_minus      = 0.04;
+params.r_F          = 0.05;
+params              = get_all_params(options, params);
 
-J= 50;
-amin = 0;
-amax = 100;
-a = linspace(amin,amax,J);
-da = (amax-amin)/(J-1);
+% Grids
+params.I            = 101;
+params.bmin         = -2;
+params.bmax         = 48;
+params.b            = linspace(params.bmin,params.bmax,params.I)';
+params.db           = (params.bmax-params.bmin)/(params.I-1);
 
-[cpol, dpol, bpol, apol, dst] = get_policies(0.08, 0.06, 0.0575);
-TL = 0;
-TK = 0;
-ldist = zeros(Nz, 1);
-ldist = sum(dst(:, :, 1), 2) * da;
-plot(b, ldist)
+params.J            = 100;
+params.amin         = 0;
+params.amax         = 150;
+params.a            = linspace(params.amin,params.amax,params.J);
+params.da           = (params.amax-params.amin)/(params.J-1);
+
+%% Test
+
+% [cpol, dpol, bpol, apol, dst] = get_policies(0.05, 0.04, 0.0382, options, params);
+% 
+% ldist   = zeros(params.Nz, 1);
+% ldist   = sum(dst(:, :, 1), 2) * params.da;
+% 
+% ildist  = zeros(params.Nz, 1);
+% ildist  = sum(dst(:, :, 1), 1) * params.db;
+% 
+% TD      = ldist' * max(params.b, 0) * params.db;        % Total liquid deposits
+% TB      = ldist' * max(-params.b, 0) * params.db;       % Total liquid borrowing
+% TS      = ildist * params.a' * params.da;               % Total illiquid assets
+% NW      = TS;                                           % Net worth = Total illiquid assets
+% 
+% 
+% subplot(1,2,1);
+% plot(params.b, ldist)
+% 
+% subplot(1,2,2);
+% plot(params.a, ildist)
+% return
+
+sol = fsolve(@(x) eqs(options, params, x), [0.04, 0.06], optimoptions('fsolve', 'Display', 'iter'))
 return
 
-for nz = 1:Nz
-    TL = TL + sum(dst(:, :, nz), 2)' * b * db * da;
-end
-
-for nz = 1:Nz
-    TK = TK + sum(dst(:, :, nz), 1) * a' * da * db;
-end
-
-TL
-TK
-
-sol = fsolve(@eqs, [11, 0.045], optimoptions('fsolve', 'Display', 'iter'))
-
-%%%%%%%%%%%
-% FIGURES %
-%%%%%%%%%%%
-
+%% Plots
 
 figure(5)
 icut = 50; jcut=50;
