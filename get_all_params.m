@@ -1,10 +1,10 @@
-function pars = get_all_params(options, params)
-    pars            = params;
-    pars.K          = ((pars.r_minus + pars.delt) / pars.alp) ^ (1 / (pars.alp - 1));
-    pars.w          = (1 - pars.alp) * pars.K ^ pars.alp;
-    pars.alp_hat    = pars.f_bank / (pars.rho_bank + pars.f_bank - pars.r_F);
-    pars.r_plus     = (pars.theta_bank * pars.r_F - pars.r_minus * pars.alp_hat) /...
-                        (pars.theta_bank - pars.alp_hat);
-    pars.x_a        = pars.alp_hat / pars.theta_bank;
-    pars.lambda     = pars.alp_hat * (pars.r_minus - pars.r_plus) / pars.theta_bank;
+function pars = get_all_params(opt, p)
+    p.K             = ((p.r_minus + p.delta) / p.Aprod / p.alpha) ^ (1 / (p.alpha - 1));
+    p.w             = (1 - p.alpha) * p.Aprod * p.K ^ p.alpha;
+    p.alp_hat       = p.f_bank / (p.rho_bank + p.f_bank - p.r_F);
+    p.r_plus        = (p.theta_bank * p.r_F - p.r_minus * p.alp_hat) /...
+                        (p.theta_bank - p.alp_hat);
+    p.x_a           = p.alp_hat / p.theta_bank;
+    p.lambda        = p.alp_hat * (p.r_minus - p.r_plus) / p.theta_bank;
+    pars            = p;
 end
