@@ -38,7 +38,8 @@ function rs = eqs(opt, p, inp, pl)
 
     rt(1)           = TB - p.x_a * NW + p.K;
     rt(2)           = TD - p.x_a * NW + NW;
-    rs              = rt(1) ^ 2 + rt(2) ^ 2;
+    % rs              = rt(1) ^ 2 + rt(2) ^ 2;
+    rs              = rt;
     
     if opt.debug_eq
         disp(rt(1));

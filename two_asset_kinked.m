@@ -11,27 +11,27 @@ params.alpha        = 0.4;
 params.delta        = 0.05;
 params.rho_bank     = -log(0.85);
 params.f_bank       = 0.15;
-params.theta_bank   = 0.4;
+params.theta_bank   = 0.42;
 
 %Income process (two-state Poisson process):
 params.Nz           = 2;
 params.z            = [.4,1.7];          
 params.la_mat       = [-1/5, 1/5; 1/5, -1/5];
 
-params.crit         = 10^(-8);
-params.Delta        = 2;
+params.crit         = 10^(-7);
+params.Delta        = 12;
 options.maxit       = 200;
 
-params.r_minus      = 0.04;
-params.r_F          = 0.042;
+params.r_minus      = 0.0380;
+params.r_F          = 0.0431;
 params              = get_all_params(options, params);
 
-params.acurve       = 5;
+params.acurve       = 1.5;
 params.bcurve       = 2;
 params.Nb           = 60;
 params.bmin         = 0;
 params.bmax         = 40;
-params.Na           = 100;
+params.Na           = 61;
 params.amin         = 0;
 params.amax         = 60;
 
@@ -43,21 +43,29 @@ options.debug_eq    = 0;
 params              = setup(options, params);
 
 %% Test
-tic;
-sol                 = get_policies(options, params);
-toc
-show_plots(options, params, sol, '-x');
-return
+% tic;
+% sol                 = get_policies(options, params);
+% toc
+% show_plots(options, params, sol, '-x');
+% return
 
 %% Find equilibrium
-rates               = fmincon(@(x) eqs(options, params, x), ...
-    [0.045 0.045], [1, -1], 0, [], [], [0.0 0.0], [0.1 0.1], [], ...
-    optimoptions('fmincon', 'Display', 'iter'));
-return
+% tic;
+% % rates               = fmincon(@(x) eqs(options, params, x), ...
+% %     [0.038 0.043], [1, -1], 0, [], [], [0.0 0.0], [0.1 0.1], [], ...
+% %     optimoptions('fmincon', 'Display', 'iter'));
+% rates               = fsolve(@(x) eqs(options, params, x), ...
+%     [0.038 0.043], optimoptions('fsolve', 'Display', 'iter'));
+% toc;
+% return
 
 %% Comparative statics
+tic;
 cs_theta_bank       = comp_stat(options, params, 'theta_bank', 0.38, 0.42, 5);
+cs_f_bank           = comp_stat(options, params, 'f_bank', 0.13, 0.17, 5);
+toc;
 
+save comp_stat.mat
 return
 
 %% Plots
