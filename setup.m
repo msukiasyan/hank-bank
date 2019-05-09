@@ -1,7 +1,15 @@
 function pars   = setup(opt, p)
+
+    %% Income transition matrix
+    p.la_mat_diag       = spdiags(spdiags(p.la_mat, 0), 0, p.Nz, p.Nz);
+    p.la_mat_offdiag    = p.la_mat - p.la_mat_diag;
+
     %% Create uneven grids
     p.b                 = p.bmin + linspace(0, 1, p.Nb)' .^ p.bcurve * (p.bmax - p.bmin);
     p.a                 = p.amin + linspace(0, 1, p.Na) .^ p.acurve * (p.amax - p.amin);
+    
+    % Correction for a grid
+    p.a(1:10)           = linspace(0, p.a(10), 10);
     
     %% Create forward and backward differences
     p.dbF               = zeros(p.Nb, 1);
@@ -41,6 +49,10 @@ function pars   = setup(opt, p)
     p.bfrombaz          = p.b(ind2subind([p.Nb, p.Na, p.Nz], [1:p.Nb * p.Na * p.Nz], 1));
     p.afrombaz          = p.a(ind2subind([p.Nb, p.Na, p.Nz], [1:p.Nb * p.Na * p.Nz], 2))';
     p.zfrombaz          = p.z(ind2subind([p.Nb, p.Na, p.Nz], [1:p.Nb * p.Na * p.Nz], 3))';
+    
+    p.bindfrombaz       = ind2subind([p.Nb, p.Na, p.Nz], [1:p.Nb * p.Na * p.Nz], 1);
+    p.aindfrombaz       = ind2subind([p.Nb, p.Na, p.Nz], [1:p.Nb * p.Na * p.Nz], 2)';
+    p.zindfrombaz       = ind2subind([p.Nb, p.Na, p.Nz], [1:p.Nb * p.Na * p.Nz], 3)';
     
     % Construct adjustment vectors used for non-uniform grid KFE
     p.dtildea           = zeros(1, p.Na);

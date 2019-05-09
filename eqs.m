@@ -1,8 +1,4 @@
-function rs = eqs(opt, p, inp, pl)
-    if nargin < 4
-        pl      = 0;
-    end
-
+function rs = eqs(opt, p, inp)
     p.r_minus   = inp(1);
     p.r_F       = inp(2);
     p           = get_all_params(opt, p);
@@ -31,14 +27,9 @@ function rs = eqs(opt, p, inp, pl)
     end
 
     NW              = TS;                                       % Net worth = Total illiquid assets
-    
-    if pl == 1
-        show_plots(opt, p, sol, '-x');
-    end
 
     rt(1)           = TB - p.x_a * NW + p.K;
     rt(2)           = TD - p.x_a * NW + NW;
-    % rs              = rt(1) ^ 2 + rt(2) ^ 2;
     rs              = rt;
     
     if opt.debug_eq

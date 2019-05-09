@@ -2,6 +2,9 @@ function stats = calc_stats(opt, p, s)
     TD              = 0;
     TB              = 0;
     TS              = 0;
+    TDz             = zeros(p.Nz, 1);
+    TBz             = zeros(p.Nz, 1);
+    TSz             = zeros(p.Nz, 1);
     ldist           = cell(p.Nz, 1);
     ildist          = cell(p.Nz, 1);
     ldist_total     = zeros(p.Nb, 1);
@@ -28,6 +31,12 @@ function stats = calc_stats(opt, p, s)
     cons_mean       = sum(wt .* cons_vec);
     a_mean          = TS;
     b_mean          = TD + TB;
+    
+    for nz = 1:p.Nz
+        TDz(nz)     = sum(wt .* (p.zindfrombaz == nz) .* p.bfrombaz .* (p.bfrombaz > 0));
+        TBz(nz)     = sum(wt .* (p.zindfrombaz == nz) .* p.bfrombaz .* (p.bfrombaz < 0));
+        TSz(nz)     = sum(wt .* (p.zindfrombaz == nz) .* p.afrombaz);
+    end
     
     %% Inequality
     [cons_vec_sorted, ord]  = sort(cons_vec);
@@ -63,9 +72,18 @@ function stats = calc_stats(opt, p, s)
 
     %% Pack
     stats           = p;
+    for nz = 1:p.Nz
+        stats.ldist{nz}     = ldist{nz};
+        stats.ildist{nz}    = ildist{nz};
+    end
+    stats.ldist_total   = ldist_total;
+    stats.ildist_total  = ildist_total;
     stats.TD        = TD;
     stats.TB        = TB;
     stats.TS        = TS;
+    stats.TDz       = TDz;
+    stats.TBz       = TBz;
+    stats.TSz       = TSz;
     stats.NW        = NW;
     stats.cons_mean = cons_mean;
     stats.a_mean    = a_mean;
