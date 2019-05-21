@@ -1,4 +1,4 @@
-function show_plots_cs(opt, p, cs, stl)
+function show_plots_cs(opt, glob, p, cs, stl)
     if nargin < 4
         stl = '-';
     end
@@ -75,5 +75,17 @@ function show_plots_cs(opt, p, cs, stl)
     xlabel(cs.par);
     ylabel('Lending Rate');
     title('Lending Rate');
+    
+    subplot(figure_height, figure_width, 12);
+    plot(cs.cs_grid, cellfun(@(x) x.r_F, cs.cs_stats), stl, 'LineWidth', 1.5)
+    xlabel(cs.par);
+    ylabel('Return');
+    title('Return From Banks');
+    
+    subplot(figure_height, figure_width, 13);
+    plot(cs.cs_grid, cellfun(@(x) x.V_mean, cs.cs_stats), stl, 'LineWidth', 1.5)
+    xlabel(cs.par);
+    ylabel('Welfare');
+    title('Welfare');
     
 end

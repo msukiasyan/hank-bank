@@ -1,10 +1,11 @@
-function rs = eqs(opt, p, inp)
+function rs = eqs(opt, glob, p, inp)
     p.r_minus   = inp(1);
     p.r_F       = inp(2);
     p           = get_all_params(opt, p);
     if size(inp, 2) > 2
         p.r_plus    = inp(3);
     end
+    p           = setup(opt, p);
     sol         = get_policies(opt, p);
     
     if ~sol.isvalid

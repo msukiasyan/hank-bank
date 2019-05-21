@@ -1,4 +1,4 @@
-function pars   = setup(opt, p)
+function pars   = setup(opt, glob, p)
 
     %% Income transition matrix
     p.la_mat_diag       = spdiags(spdiags(p.la_mat, 0), 0, p.Nz, p.Nz);
@@ -7,9 +7,27 @@ function pars   = setup(opt, p)
     %% Create uneven grids
     p.b                 = p.bmin + linspace(0, 1, p.Nb)' .^ p.bcurve * (p.bmax - p.bmin);
     p.a                 = p.amin + linspace(0, 1, p.Na) .^ p.acurve * (p.amax - p.amin);
-    
     % Correction for a grid
     p.a(1:10)           = linspace(0, p.a(10), 10);
+    
+    % Time grid
+    p.dt                = p.dtmin + linspace(0, 1, p.Ndt)' .^ p.dtcurve * (p.dtmax - p.dtmin);
+    p.tgrid             = [0; cumsum(p.dt)];
+    p.Nt                = p.Ndt + 1;
+    
+    %% Expand the grids
+    bb          = p.b * ones(1, p.Na);
+    aa          = ones(p.Nb, 1) * p.a;
+    zz          = ones(p.Na, 1) * p.z;
+
+    p.bbb       = zeros(p.Nb, p.Na, p.Nz); 
+    p.aaa       = zeros(p.Nb, p.Na, p.Nz); 
+    p.zzz       = zeros(p.Nb, p.Na, p.Nz);
+    for nz = 1:p.Nz
+        p.bbb(:, :, nz)     = bb;
+        p.aaa(:, :, nz)     = aa;
+        p.zzz(:, :, nz)     = p.z(nz);
+    end
     
     %% Create forward and backward differences
     p.dbF               = zeros(p.Nb, 1);

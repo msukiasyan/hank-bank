@@ -1,4 +1,4 @@
-function show_plots_ss(opt, p, st, stl)
+function show_plots_ss(opt, glob, p, st, stl)
     if nargin < 4
         stl = '-';
     end

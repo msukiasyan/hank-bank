@@ -1,4 +1,4 @@
-function stats = calc_stats(opt, p, s)
+function stats = calc_stats(opt, glob, p, s)
     TD              = 0;
     TB              = 0;
     TS              = 0;
@@ -12,6 +12,7 @@ function stats = calc_stats(opt, p, s)
     dist_vec        = reshape(s.dst, p.Nb * p.Na * p.Nz, 1);
     cons_vec        = reshape(s.cpol, p.Nb * p.Na * p.Nz, 1);
     dep_vec         = reshape(s.dpol, p.Nb * p.Na * p.Nz, 1);
+    V_vec           = reshape(s.V, p.Nb * p.Na * p.Nz, 1);
     wt              = p.dtildea_vec .* p.dtildeb_vec .* dist_vec;
     
     %% Marginal distributions
@@ -31,6 +32,7 @@ function stats = calc_stats(opt, p, s)
     cons_mean       = sum(wt .* cons_vec);
     a_mean          = TS;
     b_mean          = TD + TB;
+    V_mean          = sum(wt .* V_vec);
     
     for nz = 1:p.Nz
         TDz(nz)     = sum(wt .* (p.zindfrombaz == nz) .* p.bfrombaz .* (p.bfrombaz > 0));
@@ -88,6 +90,7 @@ function stats = calc_stats(opt, p, s)
     stats.cons_mean = cons_mean;
     stats.a_mean    = a_mean;
     stats.b_mean    = b_mean;
+    stats.V_mean    = V_mean;
     stats.cons_var  = cons_var;
     stats.a_var     = a_var;
     stats.b_var     = b_var;
