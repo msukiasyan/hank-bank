@@ -18,13 +18,13 @@ function sol = get_policies(opt, glob, p)
     Ra          = p.r_F .* ones(p.Nb, p.Na, p.Nz);
     
     %% Initial guess
-    v0          = utility(((1 - p.xi) * p.w * p.zzz + (Rb) .* p.bbb), opt, p) / p.rho;
+    v0          = utility(((1 - p.xi) * p.w * p.zzz + (Rb) .* p.bbb), opt, glob, p) / p.rho;
     v           = v0;
     V           = v;
 
     %% Iterate
     for n = 1:opt.maxit
-        [V, dFinal, cFinal, u, BU]  = hjb_update(opt, p, v, p.Delta);
+        [V, dFinal, cFinal, u, BU]  = hjb_update(opt, glob, p, v, p.Delta);
         Vchange                     = V - v;
         v                           = V;
         dist(n)                     = max(max(max(abs(Vchange))));
@@ -81,9 +81,9 @@ function sol = get_policies(opt, glob, p)
     sol.cpol            = cFinal;
     sol.dpol            = dFinal;
     sol.apol            = dFinal + p.xi * p.w * p.zzz + Ra .* p.aaa;
-    sol.bpol            = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - dFinal - adjustment_cost(dFinal, p.aaa, opt, p) - cFinal;
+    sol.bpol            = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - dFinal - adjustment_cost(dFinal, p.aaa, opt, glob, p) - cFinal;
     sol.sc              = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - cFinal;
-    sol.sd              = - dFinal - adjustment_cost(dFinal, p.aaa, opt, p);
+    sol.sd              = - dFinal - adjustment_cost(dFinal, p.aaa, opt, glob, p);
     sol.dst             = g;
     sol.gvec            = g_stacked;
     sol.isvalid         = isvalid;

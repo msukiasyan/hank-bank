@@ -5,7 +5,7 @@ function paths  = transition_Nshock(opt, glob, p, sol, stats, N0)
     init_state          = sol;
     for nb = 1:p.Nb
         for nz = 1:p.Nz
-            init_state.dst(nb, :, nz)   = adjust_dist_prop(opt, p, p.a, p.dtildea, init_state.dst(nb, :, nz), N0 / stats.NW);
+            init_state.dst(nb, :, nz)   = adjust_dist_prop(opt, glob, p, p.a, p.dtildea, init_state.dst(nb, :, nz), N0 / stats.NW);
         end
     end
     init_state.gvec     = reshape(init_state.dst, p.Nb * p.Na * p.Nz, 1);
@@ -15,7 +15,7 @@ function paths  = transition_Nshock(opt, glob, p, sol, stats, N0)
     final_ss.r_plus     = stats.r_plus;
     final_ss.spread     = stats.spread;
     for it = 1:opt.maxittrans
-        [guesses1, statst]  = transition_iterate(opt, p, guesses0, init_state, final_ss);
+        [guesses1, statst]  = transition_iterate(opt, glob, p, guesses0, init_state, final_ss);
         diffK               = max(abs(guesses1.Kt - guesses0.Kt));
         diffx_a             = max(abs(guesses1.x_at - guesses0.x_at));
         guesses0            = guesses1;

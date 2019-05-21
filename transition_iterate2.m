@@ -22,8 +22,8 @@ function guesses1 = transition_iterate2(opt, glob, p, guesses, init_state, final
     Kt              = guesses.Kt;
     
     %% r_minus and w from K
-    r_minust        = prod_K(opt, p, Kt) - p.delta;
-    wt              = prod_L(opt, p, Kt);
+    r_minust        = prod_K(opt, glob, p, Kt) - p.delta;
+    wt              = prod_L(opt, glob, p, Kt);
     spreadt         = r_minust - r_plust;
     % r_plust         = [r_plust; interp1(p.tgrid(1:end-1), r_plust, p.tgrid(end), 'linear', 'extrap')];
     % spreadt         = [spreadt; interp1(p.tgrid(1:end-1), spreadt, p.tgrid(end), 'linear', 'extrap')];
@@ -43,7 +43,7 @@ function guesses1 = transition_iterate2(opt, glob, p, guesses, init_state, final
 %         etat(t)     = etat(t + 1) - p.dt(t) * min((p.rho_bank + p.f_bank - r_plust(t + 1) - spreadt(t + 1) .* etat(t + 1) / p.theta_bank) .* etat(t + 1) - p.f_bank, 1e12);
     end
     
-%     init_stats      = calc_stats(opt, p, init_state);
+%     init_stats      = calc_stats(opt, glob, p, init_state);
 %     etat(1)         = (init_stats.TS + init_stats.TD) / init_stats.TS * p.theta_bank;
 %     for t = 2:p.Nt
 % %         qA          = p.dt(t) * spreadt(t) / p.theta_bank;
@@ -65,7 +65,7 @@ function guesses1 = transition_iterate2(opt, glob, p, guesses, init_state, final
         p.r_minus                           = r_minust(t);
         p.r_F                               = r_Ft(t);
         p.w                                 = wt(t);
-        [Vt{t}, dt{t}, ct{t}, ~, BU(t, :)]  = hjb_update(opt, p, Vt{t + 1}, p.dt(t));
+        [Vt{t}, dt{t}, ct{t}, ~, BU(t, :)]  = hjb_update(opt, glob, p, Vt{t + 1}, p.dt(t));
     end
 
     %% Solve KFE forward
@@ -90,7 +90,7 @@ function guesses1 = transition_iterate2(opt, glob, p, guesses, init_state, final
     
     %% Get statistics
     for t = 1:p.Nt
-        stats               = calc_stats(opt, p, struct('dst', gt{t}, 'cpol', ct{t}, 'dpol', dt{t}, 'V', Vt{t}));
+        stats               = calc_stats(opt, glob, p, struct('dst', gt{t}, 'cpol', ct{t}, 'dpol', dt{t}, 'V', Vt{t}));
         TSt(t)              = stats.TS;
         TBt(t)              = stats.TB;
         TDt(t)              = stats.TD;

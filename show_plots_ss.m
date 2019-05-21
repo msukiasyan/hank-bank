@@ -1,5 +1,5 @@
 function show_plots_ss(opt, glob, p, st, stl)
-    if nargin < 4
+    if nargin < 5
         stl = '-';
     end
   

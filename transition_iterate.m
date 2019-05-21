@@ -24,8 +24,8 @@ function [guesses1, statst] = transition_iterate(opt, glob, p, guesses, init_sta
     Kt              = guesses.Kt;
     
     %% r_minus and w from K
-    r_minust        = prod_K(opt, p, Kt) - p.delta;
-    wt              = prod_L(opt, p, Kt);
+    r_minust        = prod_K(opt, glob, p, Kt) - p.delta;
+    wt              = prod_L(opt, glob, p, Kt);
     
     %% eta from leverage
     etat            = x_at * p.theta_bank;
@@ -48,7 +48,7 @@ function [guesses1, statst] = transition_iterate(opt, glob, p, guesses, init_sta
         p.r_minus                           = r_minust(t);
         p.r_F                               = r_Ft(t);
         p.w                                 = wt(t);
-        [Vt{t}, dt{t}, ct{t}, ~, BU(t, :)]  = hjb_update(opt, p, Vt{t + 1}, p.dt(t));
+        [Vt{t}, dt{t}, ct{t}, ~, BU(t, :)]  = hjb_update(opt, glob, p, Vt{t + 1}, p.dt(t));
     end
 
     %% Solve KFE forward
@@ -69,7 +69,7 @@ function [guesses1, statst] = transition_iterate(opt, glob, p, guesses, init_sta
     
     %% Get statistics
     for t = 1:p.Nt
-        statst{t}           = calc_stats(opt, p, struct('dst', gt{t}, 'cpol', ct{t}, 'dpol', dt{t}, 'V', Vt{t}));
+        statst{t}           = calc_stats(opt, glob, p, struct('dst', gt{t}, 'cpol', ct{t}, 'dpol', dt{t}, 'V', Vt{t}));
         TSt(t)              = statst{t}.TS;
         TBt(t)              = statst{t}.TB;
         TDt(t)              = statst{t}.TD;

@@ -15,6 +15,8 @@ function pars   = setup(opt, glob, p)
     p.tgrid             = [0; cumsum(p.dt)];
     p.Nt                = p.Ndt + 1;
     
+    p                   = update_idio_risk(opt, glob, p);
+    
     %% Expand the grids
     bb          = p.b * ones(1, p.Na);
     aa          = ones(p.Nb, 1) * p.a;

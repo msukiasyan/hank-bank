@@ -1,12 +1,12 @@
 function rs = eqs(opt, glob, p, inp)
     p.r_minus   = inp(1);
     p.r_F       = inp(2);
-    p           = get_all_params(opt, p);
+    p           = get_ss_params(opt, glob, p);
     if size(inp, 2) > 2
         p.r_plus    = inp(3);
     end
-    p           = setup(opt, p);
-    sol         = get_policies(opt, p);
+    p           = setup(opt, glob, p);
+    sol         = get_policies(opt, glob, p);
     
     if ~sol.isvalid
         rs = 1e12;

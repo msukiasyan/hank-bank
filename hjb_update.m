@@ -33,7 +33,7 @@ function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     VbF(1:p.Nb - 1, :, :)   = (V(2:p.Nb, :, :) - V(1:p.Nb-1, :, :)) ./ p.dbF(1:p.Nb - 1);
     %   backward difference
     VbB(2:p.Nb, :, :)       = (V(2:p.Nb, :, :) - V(1:p.Nb - 1, :, :)) ./ p.dbB(2:p.Nb);
-    VbB(1, :, :)            = utility_prime((1 - p.xi) * p.w * p.zzz(1, :, :) + Rb(1, :, :) .* p.bmin, opt, p); %state constraint boundary condition
+    VbB(1, :, :)            = utility_prime((1 - p.xi) * p.w * p.zzz(1, :, :) + Rb(1, :, :) .* p.bmin, opt, glob, p); %state constraint boundary condition
 
     % Derivatives wrt a
     %   forward difference
@@ -50,23 +50,23 @@ function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     c_B                 = VbB .^ (-1 / p.ga);
     c_F                 = VbF .^ (-1 / p.ga);
     c_0                 = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb;
-    dBB                 = optimal_deposit(VaB, VbB, p.aaa, opt, p);
-    dFB                 = optimal_deposit(VaB, VbF, p.aaa, opt, p);
-    dBF                 = optimal_deposit(VaF, VbB, p.aaa, opt, p);
+    dBB                 = optimal_deposit(VaB, VbB, p.aaa, opt, glob, p);
+    dFB                 = optimal_deposit(VaB, VbF, p.aaa, opt, glob, p);
+    dBF                 = optimal_deposit(VaF, VbB, p.aaa, opt, glob, p);
 
     %% Determine the deposit components of a and b drifts
     % BB -- a backward, b backward
     validBB             = true(p.Nb, p.Na, p.Nz);
     vcBB                = VaB .* dBB - VbB .* (dBB + ...
-                            adjustment_cost(dBB, p.aaa, opt, p));
+                            adjustment_cost(dBB, p.aaa, opt, glob, p));
     validBB(:, 1, :)    = 0;
     vcBB(:, 1, :)       = -1e20;
-    validBB             = validBB & (dBB + adjustment_cost(dBB, p.aaa, opt, p) > 0) ...
+    validBB             = validBB & (dBB + adjustment_cost(dBB, p.aaa, opt, glob, p) > 0) ...
                         & (dBB <= 0) & (vcBB > 0);
     % BF -- a forward, b backward
     validBF             = true(p.Nb, p.Na, p.Nz);
     vcBF                = VaF .* dBF - VbB .* (dBF + ...
-                            adjustment_cost(dBF, p.aaa, opt, p));
+                            adjustment_cost(dBF, p.aaa, opt, glob, p));
     validBF(:, p.Na, :) = 0;
     validBF(1, :, :)    = 0;
     vcBF(:, p.Na, :)    = -1e20;
@@ -75,12 +75,12 @@ function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     % FB -- a backward, b forward
     validFB             = true(p.Nb, p.Na, p.Nz);
     vcFB                = VaB .* dFB - VbF .* (dFB + ...
-                            adjustment_cost(dFB, p.aaa, opt, p));
+                            adjustment_cost(dFB, p.aaa, opt, glob, p));
     validFB(:, 1, :)    = 0;
     vcFB(:, 1, :)       = -1e20;
     validFB(p.Nb, :, :)    = 0;
     vcFB(p.Nb, :, :)       = -1e20;
-    validFB             = validFB & (dFB + adjustment_cost(dFB, p.aaa, opt, p) <= 0) ... 
+    validFB             = validFB & (dFB + adjustment_cost(dFB, p.aaa, opt, glob, p) <= 0) ... 
                         & (vcFB > 0);
 
     dFinal              = zeros(p.Nb, p.Na, p.Nz);
@@ -97,25 +97,25 @@ function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     dFinal(indmat)      = dFB(indmat);
 
 
-    sdFinal             = -(dFinal + adjustment_cost(dFinal, p.aaa, opt, p));
+    sdFinal             = -(dFinal + adjustment_cost(dFinal, p.aaa, opt, glob, p));
 
     %% Determine consumption
     sc_B                = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - c_B;
     validB              = true(p.Nb, p.Na, p.Nz);
-    vcB                 = utility(c_B, opt, p) + VbB .* sc_B;
+    vcB                 = utility(c_B, opt, glob, p) + VbB .* sc_B;
     validB(1, :, :)     = 0;
     vcB(1, :, :)        = -1e20;
     validB              = validB & (sc_B < 0);
 
     sc_F                = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - c_F;
     validF              = true(p.Nb, p.Na, p.Nz);
-    vcF                 = utility(c_F, opt, p) + VbF .* sc_F;
+    vcF                 = utility(c_F, opt, glob, p) + VbF .* sc_F;
     validF(p.Nb, :, :)  = 0;
     vcF(p.Nb, :, :)     = -1e20;
     validF              = validF & (sc_F > 0);
 
     sc_0                = 0;
-    vc0                 = utility(c_0, opt, p);
+    vc0                 = utility(c_0, opt, glob, p);
 
     cFinal              = zeros(p.Nb, p.Na, p.Nz);
     curvc               = ones(p.Nb, p.Na, p.Nz) * (-1e20);
@@ -132,7 +132,7 @@ function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
 
     scFinal             = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - cFinal;
 
-    u                   = utility(cFinal, opt, p);
+    u                   = utility(cFinal, opt, glob, p);
 
     %CONSTRUCT MATRIX BB SUMMARING EVOLUTION OF b
     X                   = -(min(scFinal, 0) + min(sdFinal, 0)) ./ p.dbB;
@@ -204,7 +204,7 @@ function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
         d               = dFinal;
         d(p.Nb, :, :)   = d(p.Nb - 1, :, :);
         m               = d + p.xi * p.w * p.zzz + Ra .* p.aaa;
-        s               = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - d - adjustment_cost(d, p.aaa, opt, p) - cFinal;
+        s               = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - d - adjustment_cost(d, p.aaa, opt, glob, p) - cFinal;
 
         m(:, 1, :)      = max(m(:, 1, :), 0.0);
         m(:, p.Na, :)   = min(m(:, p.Na, :), 0.0);
