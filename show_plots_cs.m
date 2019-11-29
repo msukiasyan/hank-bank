@@ -1,5 +1,5 @@
 function show_plots_cs(opt, glob, p, cs, stl)
-    if nargin < 4
+    if nargin < 5
         stl = '-';
     end
   
@@ -83,9 +83,41 @@ function show_plots_cs(opt, glob, p, cs, stl)
     title('Return From Banks');
     
     subplot(figure_height, figure_width, 13);
+    plot(cs.cs_grid, cellfun(@(x) x.w, cs.cs_stats), stl, 'LineWidth', 1.5)
+    xlabel(cs.par);
+    ylabel('Wage');
+    title('Wage');
+    
+    subplot(figure_height, figure_width, 14);
     plot(cs.cs_grid, cellfun(@(x) x.V_mean, cs.cs_stats), stl, 'LineWidth', 1.5)
     xlabel(cs.par);
     ylabel('Welfare');
     title('Welfare');
+    
+    if opt.GK && p.distGK == "twopoint"
+        subplot(figure_height, figure_width, 15);
+        yvar    = zeros(length(cs.cs_grid), 1);
+        for cg  = 1:length(cs.cs_grid)
+            yvar(cg)    = sum(cs.cs_stats{cg}.dtildea_vec .* ...
+            cs.cs_stats{cg}.dtildeb_vec .* reshape(cs.cs_sol{cg}.dst, p.Nb * p.Na * p.Nz, 1) ...
+            .* reshape(cs.cs_sol{cg}.cpol, p.Nb * p.Na * p.Nz, 1) .* (abs(cs.cs_stats{cg}.afrombaz - cs.cs_stats{cg}.a(2)) < 1e-9) ./ cs.cs_stats{cg}.fracGK);
+        end
+        plot(cs.cs_grid, yvar, stl, 'LineWidth', 1.5)
+        xlabel(cs.par);
+        ylabel('Welfare');
+        title('Average Welfare of Bank Owners');
+        
+        subplot(figure_height, figure_width, 16);
+        yvar    = zeros(length(cs.cs_grid), 1);
+        for cg  = 1:length(cs.cs_grid)
+            yvar(cg)    = sum(cs.cs_stats{cg}.dtildea_vec .* ...
+            cs.cs_stats{cg}.dtildeb_vec .* reshape(cs.cs_sol{cg}.dst, p.Nb * p.Na * p.Nz, 1) ...
+            .* reshape(cs.cs_sol{cg}.cpol, p.Nb * p.Na * p.Nz, 1) .* (abs(cs.cs_stats{cg}.afrombaz - cs.cs_stats{cg}.a(1)) < 1e-9) ./ (1 - cs.cs_stats{cg}.fracGK));
+        end
+        plot(cs.cs_grid, yvar, stl, 'LineWidth', 1.5)
+        xlabel(cs.par);
+        ylabel('Welfare');
+        title('Average Welfare of the Rest');
+    end
     
 end

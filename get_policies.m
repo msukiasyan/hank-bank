@@ -18,7 +18,7 @@ function sol = get_policies(opt, glob, p)
     Ra          = p.r_F .* ones(p.Nb, p.Na, p.Nz);
     
     %% Initial guess
-    v0          = utility(((1 - p.xi) * p.w * p.zzz + (Rb) .* p.bbb), opt, glob, p) / p.rho;
+    v0          = utility(((1 - p.xi) * p.w * p.zzz + max((Rb) .* p.bbb, 0)), opt, glob, p) / p.rho;
     v           = v0;
     V           = v;
 
@@ -45,6 +45,13 @@ function sol = get_policies(opt, glob, p)
     gmatp               = zeros(p.Nb * p.Na, p.Nz);
     gmat                = ones(p.Nb * p.Na, p.Nz);
     lmat                = eye(p.Nz, p.Nz) + p.DeltaKFE * p.la_mat_offdiag;
+    
+    % Set initial distribution
+    ginit               = zeros(p.Nb, p.Na, p.Nz);
+    for na = 1:p.Na
+        ginit(10, na, 1) = p.init_dist(na);
+    end
+    gmat                = reshape(ginit, p.Nb * p.Na, p.Nz);
     
     for nz = 1:p.Nz
         [gBl{nz}, gBu{nz}]  = lu((1.0 - p.DeltaKFE * p.la_mat(nz, nz)) * speye(p.Nb * p.Na) - p.DeltaKFE * Ai{nz});

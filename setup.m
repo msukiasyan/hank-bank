@@ -10,6 +10,22 @@ function pars   = setup(opt, glob, p)
     % Correction for a grid
     p.a(1:10)           = linspace(0, p.a(10), 10);
     
+    p.init_dist         = ones(p.Na, 1) / p.Na;
+    if opt.GK
+        switch p.distGK
+            case "twopoint"                                     % this is not what uniform means!!! change later
+                p.init_dist     = zeros(p.Na, 1);
+                p.init_dist(1)  = 1 - p.fracGK;
+                p.init_dist(2)  = p.fracGK;
+        end
+        p.a             = linspace(0, 1, p.Na);
+        p.a             = p.a / (p.a * p.init_dist);
+        
+        if isfield(p, 'NW')
+            p.a             = p.a * p.NW;
+        end
+    end
+    
     % Time grid
     p.dt                = p.dtmin + linspace(0, 1, p.Ndt)' .^ p.dtcurve * (p.dtmax - p.dtmin);
     p.tgrid             = [0; cumsum(p.dt)];

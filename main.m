@@ -4,6 +4,7 @@ warning off
 %% Parameters
 params.ga           = 2;                    % CRRA utility with parameter gamma
 params.rho          = 0.01272892513;        % discount rate
+% params.chi0         = 1e5;
 params.chi0         = 0.04383;
 params.chi1         = 0.95616994593;
 params.chi2         = 1.40176;
@@ -15,6 +16,7 @@ params.delta        = 0.07 / 4;
 params.rho_bank     = -log(0.98);
 params.f_bank       = 0.02;
 params.theta_bank   = 0.3;
+params.mu           = 0.7;                  % fraction of illiquid assets held in "illiquid deposits"
 
 % Income process
 params.Nz           = 3;
@@ -33,8 +35,8 @@ params.critKFE      = 10^(-12);
 params.Delta        = 1000000.0;
 params.DeltaKFE     = 1000.0;
 
-params.r_minus      = 0.004;% 0.0380;
-params.r_F          = 0.0045;%0.01422840843846188;% 0.0431;
+params.r_minus      = 0.004;
+params.r_F          = 0.0062;%0.01422840843846188;
 params.r_init       = [params.r_minus, params.r_F];
 
 %% Global parameters
@@ -52,15 +54,24 @@ params.Ndt          = 50;
 params.dtmin        = 1 / 3;
 params.dtmax        = 150;
 
+%% GK (family) parameters
+params.distGK       = "twopoint";
+params.fracGK       = 1.00;          % Fraction of people having bank ownership
+
+params.MGK          = 0.1;
+
 %% Options
 options.maxit       = 700;
 options.maxitKFE    = 50000;
 options.debug_v     = 1;
-options.debug_eq    = 0;
+options.debug_eq    = 1;
 options.stepK       = 0.1;
 options.stepr       = 0.001;
-options.maxittrans  = 500;
+options.maxittrans  = 1000;
 options.transtol    = 1e-6;
+options.divtoliq    = true;
+
+options.GK          = 0;                         % If 1, must also be that divtoliq == true and chi0 large
 
 %% Setup
 params              = setup(options, glob, params);
@@ -127,24 +138,38 @@ params              = setup(options, glob, params);
 % return
 
 %% Find equilibrium
-% tic;
-% [sol, stats]        = find_ss(options, glob, params, [], 1);
-% toc;
-% return
-
-%% MIT shock to illiquid stock
 tic;
 [sol, stats]        = find_ss(options, glob, params, [], 1);
 toc;
-tic;
-% paths               = transition_Nshock(options, glob, params, sol, stats, stats.NW * 0.95);
-toc;
 return
+
+%% MIT shock to illiquid stock
+% tic;
+% [sol, stats]        = find_ss(options, glob, params, [], 1);
+% toc;
+% tic;
+% paths               = transition_Nshock(options, glob, params, sol, stats, stats.NW * 0.95);
+% toc;
+% return
+
+%% MIT shock
+% tic;
+% [sol, stats]        = find_ss(options, glob, params, [], 0);
+% toc;
+% tic;
+% % [paths, statst]     = transition_Ashock(options, glob, params, sol, stats, -0.01, 0.05);
+% [paths, statst]     = transition_Kshock(options, glob, params, sol, stats, -0.01);
+% toc;
+% 
+% show_plots_mit(options, glob, params, stats, paths, statst);
+% 
+% return
 
 %% Comparative statics
 tic;
-cs_zfactor          = comp_stat(options, glob, params, 'zfactor', 0.95, 1.05, 5);
-% cs_theta_bank       = comp_stat(options, glob, params, 'theta_bank', 0.48, 0.52, 5);
+% cs_fracGK           = comp_stat(options, glob, params, 'fracGK', 0.05, 0.95, 10);
+% cs_theta_bank       = comp_stat(options, glob, params, 'theta_bank', 0.25, 0.35, 5);
+% cs_zfactor          = comp_stat(options, glob, params, 'zfactor', 0.9, 1.1, 5);
 % cs_f_bank           = comp_stat(options, glob, params, 'f_bank', params.f_bank * 0.95, params.f_bank * 1.05, 5);
 % cs_rho              = comp_stat(options, glob, params, 'rho', params.rho * 0.95, params.rho * 1.05, 5);
 % cs_rho_bank         = comp_stat(options, glob, params, 'rho_bank', params.rho_bank * 0.95, params.rho_bank * 1.05, 5);

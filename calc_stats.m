@@ -15,10 +15,14 @@ function stats = calc_stats(opt, glob, p, s)
     V_vec           = reshape(s.V, p.Nb * p.Na * p.Nz, 1);
     wt              = p.dtildea_vec .* p.dtildeb_vec .* dist_vec;
     
+    Rb              = p.r_plus .* (p.bbb > 0) + p.r_minus .* (p.bbb < 0);
+    Ra              = p.r_F .* ones(p.Nb, p.Na, p.Nz);
+    total_inc       = reshape(p.w * p.zzz + Rb .* p.bbb + Ra .* p.aaa, p.Nb * p.Na * p.Nz, 1);
+    
     %% Marginal distributions
     for nz = 1:p.Nz
-        ldist{nz}       = trapz(p.a, s.dst(:, :, nz), 2);         
-        ildist{nz}      = trapz(p.b, s.dst(:, :, nz), 1);   
+        ldist{nz}       = trapz(p.a, s.dst(:, :, nz), 2);
+        ildist{nz}      = trapz(p.b, s.dst(:, :, nz), 1);
         ldist_total     = ldist_total + ldist{nz};
         ildist_total    = ildist_total + ildist{nz};
     end
@@ -30,6 +34,7 @@ function stats = calc_stats(opt, glob, p, s)
     TS              = sum(wt .* p.afrombaz);
     NW              = TS;                                           % Net worth = Total illiquid assets
     cons_mean       = sum(wt .* cons_vec);
+    total_inc_mean  = sum(wt .* total_inc);
     a_mean          = TS;
     b_mean          = TD + TB;
     V_mean          = sum(wt .* V_vec);
@@ -39,6 +44,16 @@ function stats = calc_stats(opt, glob, p, s)
         TBz(nz)     = sum(wt .* (p.zindfrombaz == nz) .* p.bfrombaz .* (p.bfrombaz < 0));
         TSz(nz)     = sum(wt .* (p.zindfrombaz == nz) .* p.afrombaz);
     end
+    
+    %% Conditional group totals for the wealthy (w) and the poor (p)
+    b_mean_w        = sum(wt .* p.bfrombaz .* (p.aindfrombaz > 1)) / sum(wt .* (p.aindfrombaz > 1));
+    b_mean_p        = sum(wt .* p.bfrombaz .* (p.aindfrombaz == 1)) / sum(wt .* (p.aindfrombaz == 1));
+    cons_mean_w     = sum(wt .* cons_vec .* (p.aindfrombaz > 1)) / sum(wt .* (p.aindfrombaz > 1));
+    cons_mean_p     = sum(wt .* cons_vec .* (p.aindfrombaz == 1)) / sum(wt .* (p.aindfrombaz == 1));
+    V_mean_w        = sum(wt .* V_vec .* (p.aindfrombaz > 1)) / sum(wt .* (p.aindfrombaz > 1));
+    V_mean_p        = sum(wt .* V_vec .* (p.aindfrombaz == 1)) / sum(wt .* (p.aindfrombaz == 1));
+    total_inc_mean_w    = sum(wt .* total_inc .* (p.aindfrombaz > 1)) / sum(wt .* (p.aindfrombaz > 1));
+    total_inc_mean_p    = sum(wt .* total_inc .* (p.aindfrombaz == 1)) / sum(wt .* (p.aindfrombaz == 1));
     
     %% Inequality
     [cons_vec_sorted, ord]  = sort(cons_vec);
@@ -66,8 +81,8 @@ function stats = calc_stats(opt, glob, p, s)
     a90             = prctilew(p.afrombaz, wt, 0.9);
     b10             = prctilew(p.bfrombaz, wt, 0.1);
     b90             = prctilew(p.bfrombaz, wt, 0.9);
-    c10             = prctilew(cons_vec, dist_vec, 0.1);
-    c90             = prctilew(cons_vec, dist_vec, 0.9);
+    c10             = prctilew(cons_vec, wt, 0.1);
+    c90             = prctilew(cons_vec, wt, 0.9);
     b_var           = sum((p.bfrombaz - TD - TB) .^ 2 .* wt);
     a_var           = sum((p.afrombaz - TS) .^ 2 .* wt);
     cons_var        = sum((cons_vec - cons_mean) .^ 2 .* wt);
@@ -91,6 +106,15 @@ function stats = calc_stats(opt, glob, p, s)
     stats.a_mean    = a_mean;
     stats.b_mean    = b_mean;
     stats.V_mean    = V_mean;
+    stats.total_inc_mean    = total_inc_mean;
+    stats.b_mean_w  = b_mean_w;
+    stats.b_mean_p  = b_mean_p;
+    stats.cons_mean_w   = cons_mean_w;
+    stats.cons_mean_p   = cons_mean_p;
+    stats.V_mean_w  = V_mean_w;
+    stats.V_mean_p  = V_mean_p;
+    stats.total_inc_mean_w  = total_inc_mean_w;
+    stats.total_inc_mean_p  = total_inc_mean_p;
     stats.cons_var  = cons_var;
     stats.a_var     = a_var;
     stats.b_var     = b_var;

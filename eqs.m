@@ -6,6 +6,12 @@ function rs = eqs(opt, glob, p, inp)
         p.r_plus    = inp(3);
     end
     p           = setup(opt, glob, p);
+    if isfield(p, "NW") && p.NW < 0
+        rs      = [1e10, 1e10];
+        return
+    end
+    p.r_bankeq  = p.r_F;
+    p.r_F       = p.mu * p.r_plus + (1 - p.mu) * p.r_F;
     sol         = get_policies(opt, glob, p);
     
     if ~sol.isvalid
@@ -27,10 +33,11 @@ function rs = eqs(opt, glob, p, inp)
         TS          = TS + trapz(p.a, ildist{nz} .* p.a);              % Total illiquid assets
     end
 
-    NW              = TS;                                       % Net worth = Total illiquid assets
+    NW              = TS * (1 - p.mu);                                 % Net worth = Total illiquid assets * mu
+    TD_bank         = TD + TS * p.mu;
 
     rt(1)           = TB - p.x_a * NW + p.K;
-    rt(2)           = TD - p.x_a * NW + NW;
+    rt(2)           = TD_bank - p.x_a * NW + NW;
     rs              = rt;
     
     if opt.debug_eq

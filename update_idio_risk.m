@@ -1,11 +1,13 @@
 function p  = update_idio_risk(opt, glob, p)
-    %% Finalize shock grid
-    p.z             = p.zfactor * (p.zbase - mean(p.zbase)) + mean(p.zbase);
     
     %% Find the stationary distribution for z
-    [E, V]          = eig(p.la_mat);
+    [E, V]          = eig(p.la_mat');
     p.z_dist        = E(:, abs(diag(V)) < 1e-12);
     p.z_dist        = p.z_dist' / sum(p.z_dist);
+    
+    %% Finalize shock grid
+    p.zbase         = p.zbase / (p.zbase * p.z_dist');
+    p.z             = p.zfactor * (p.zbase - (p.zbase * p.z_dist')) + (p.zbase * p.z_dist');
     
     %% Expand the grids
     bb          = p.b * ones(1, p.Na);

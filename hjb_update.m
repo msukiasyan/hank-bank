@@ -27,13 +27,18 @@ function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     Rb          = p.r_plus .* (p.bbb > 0) + p.r_minus .* (p.bbb < 0);
     Ra          = p.r_F .* ones(p.Nb, p.Na, p.Nz);
     
+    adriftb     = zeros(p.Nb, p.Na, p.Nz);
+    if opt.divtoliq
+        adriftb = Ra .* p.aaa;
+    end
+    
     %% Solve
     % Derivatives wrt b
     %   forward difference
     VbF(1:p.Nb - 1, :, :)   = (V(2:p.Nb, :, :) - V(1:p.Nb-1, :, :)) ./ p.dbF(1:p.Nb - 1);
     %   backward difference
     VbB(2:p.Nb, :, :)       = (V(2:p.Nb, :, :) - V(1:p.Nb - 1, :, :)) ./ p.dbB(2:p.Nb);
-    VbB(1, :, :)            = utility_prime((1 - p.xi) * p.w * p.zzz(1, :, :) + Rb(1, :, :) .* p.bmin, opt, glob, p); %state constraint boundary condition
+    VbB(1, :, :)            = utility_prime((1 - p.xi) * p.w * p.zzz(1, :, :) + Rb(1, :, :) .* p.bmin + adriftb(1, :, :), opt, glob, p); %state constraint boundary condition
 
     % Derivatives wrt a
     %   forward difference
@@ -49,7 +54,7 @@ function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     %useful quantities
     c_B                 = VbB .^ (-1 / p.ga);
     c_F                 = VbF .^ (-1 / p.ga);
-    c_0                 = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb;
+    c_0                 = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb + adriftb;
     dBB                 = optimal_deposit(VaB, VbB, p.aaa, opt, glob, p);
     dFB                 = optimal_deposit(VaB, VbF, p.aaa, opt, glob, p);
     dBF                 = optimal_deposit(VaF, VbB, p.aaa, opt, glob, p);
@@ -100,14 +105,14 @@ function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     sdFinal             = -(dFinal + adjustment_cost(dFinal, p.aaa, opt, glob, p));
 
     %% Determine consumption
-    sc_B                = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - c_B;
+    sc_B                = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - c_B + adriftb;
     validB              = true(p.Nb, p.Na, p.Nz);
     vcB                 = utility(c_B, opt, glob, p) + VbB .* sc_B;
     validB(1, :, :)     = 0;
     vcB(1, :, :)        = -1e20;
     validB              = validB & (sc_B < 0);
 
-    sc_F                = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - c_F;
+    sc_F                = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - c_F + adriftb;
     validF              = true(p.Nb, p.Na, p.Nz);
     vcF                 = utility(c_F, opt, glob, p) + VbF .* sc_F;
     validF(p.Nb, :, :)  = 0;
@@ -130,7 +135,7 @@ function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     cFinal(indmat)      = c_F(indmat);
 
 
-    scFinal             = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - cFinal;
+    scFinal             = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - cFinal + adriftb;
 
     u                   = utility(cFinal, opt, glob, p);
 
@@ -141,7 +146,7 @@ function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     Z                   = (max(scFinal, 0) + max(sdFinal, 0)) ./ p.dbF;
 
     if any(any(abs(X(1, :, :)) > 1e-12)) || any(any(abs(Z(p.Nb, :, :)) > 1e-12))
-        disp('warning');
+        % disp('warning');
     end
 
     for i = 1:p.Nz
@@ -163,14 +168,18 @@ function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
 
     % CONSTRUCT MATRIX AA SUMMARIZING EVOLUTION OF a
     MB                  = min(dFinal, 0);
-    MF                  = max(dFinal, 0) + p.xi * p.w * p.zzz + Ra .* p.aaa;
+    MF                  = max(dFinal, 0) + p.xi * p.w * p.zzz;
+    if ~opt.divtoliq
+        MF              = MF + Ra .* p.aaa;
+    end
     MF(:, p.Na, :)      = 0.0;
+    
     chi                 = -MB ./ p.daB;
     yy                  = MB ./ p.daB - MF ./ p.daF;
     zeta                = MF ./ p.daF;
 
     if any(any(abs(MB(:, 1, :)) > 1e-12)) || any(any(abs(MF(:, p.Na, :)) > 1e-12))
-        disp('warning');
+        % disp('warning');
     end
 
     % Matrix AAi
@@ -203,9 +212,15 @@ function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     if nargout > 4                                                          
         d               = dFinal;
         d(p.Nb, :, :)   = d(p.Nb - 1, :, :);
-        m               = d + p.xi * p.w * p.zzz + Ra .* p.aaa;
+        m               = d + p.xi * p.w * p.zzz;
         s               = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - d - adjustment_cost(d, p.aaa, opt, glob, p) - cFinal;
 
+        if ~opt.divtoliq
+            m           = m + Ra .* p.aaa;
+        else
+            s           = s + Ra .* p.aaa;
+        end
+        
         m(:, 1, :)      = max(m(:, 1, :), 0.0);
         m(:, p.Na, :)   = min(m(:, p.Na, :), 0.0);
         s(1, :, :)      = max(s(1, :, :), 0.0);
