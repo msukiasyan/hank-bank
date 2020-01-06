@@ -1,4 +1,4 @@
-function [paths, statst]  = transition_Nshock(opt, glob, p, sol, stats, N0)
+function [paths, statst]  = transition_Nshock_newton(opt, glob, p, sol, stats, N0)
     guesses0.Kt         = ones(p.Nt, 1) * stats.K;
     guesses0.x_at       = repmat(stats.x_a, p.Nt, 1);
     
@@ -15,6 +15,8 @@ function [paths, statst]  = transition_Nshock(opt, glob, p, sol, stats, N0)
     final_ss.r_plus     = stats.r_plus;
     final_ss.spread     = stats.spread;
     final_ss.NW         = stats.NW;
+    final_ss.K          = stats.K;
+    final_ss.x_a        = stats.x_a;
     
     if opt.GK
         p.NW                = 1;            % Make sure p.a is not distorted, because we want to 
@@ -24,16 +26,5 @@ function [paths, statst]  = transition_Nshock(opt, glob, p, sol, stats, N0)
         init_state.gvec     = init_state.gvec ./ (p.dtildea_vec .* p.dtildeb_vec);
     end
     
-    for it = 1:opt.maxittrans
-        [guesses1, statst]  = transition_iterate(opt, glob, p, guesses0, init_state, final_ss);
-        diffK               = max(abs(guesses1.Kt - guesses0.Kt));
-        diffx_a             = max(abs(guesses1.x_at - guesses0.x_at));
-        guesses0            = guesses1;
-        disp(diffK);
-        disp(diffx_a);
-        if max(diffK, diffx_a) < opt.transtol
-            break
-        end
-    end
-    paths               = guesses0;
+    [paths, statst]         = do_transition_newton(opt, glob, p, init_state, final_ss);
 end

@@ -16,7 +16,7 @@ params.delta        = 0.07 / 4;
 params.rho_bank     = -log(0.98);
 params.f_bank       = 0.02;
 params.theta_bank   = 0.3;
-params.mu           = 0.7;                  % fraction of illiquid assets held in "illiquid deposits"
+params.mu           = 0.0;                  % fraction of illiquid assets held in "illiquid deposits"
 
 % Income process
 params.Nz           = 3;
@@ -72,6 +72,12 @@ options.transtol    = 1e-6;
 options.divtoliq    = true;
 
 options.GK          = 0;                         % If 1, must also be that divtoliq == true and chi0 large
+
+options.stepK_nt    = 1e-4;
+options.stepx_a_nt  = 1e-5;
+options.tol_nt      = 1e-10;
+options.maxittrans_nt   = 100;
+options.debug_trans = 1;
 
 %% Setup
 params              = setup(options, glob, params);
@@ -138,32 +144,32 @@ params              = setup(options, glob, params);
 % return
 
 %% Find equilibrium
-tic;
-[sol, stats]        = find_ss(options, glob, params, [], 1);
-toc;
-return
+% tic;
+% [sol, stats]        = find_ss(options, glob, params, [], 1);
+% toc;
+% return
 
 %% MIT shock to illiquid stock
 % tic;
 % [sol, stats]        = find_ss(options, glob, params, [], 1);
 % toc;
 % tic;
-% paths               = transition_Nshock(options, glob, params, sol, stats, stats.NW * 0.95);
+% [paths, statst]     = transition_Nshock(options, glob, params, sol, stats, stats.NW * 0.95);
+% show_plots_mit(options, glob, params, stats, paths, statst);
 % toc;
 % return
 
 %% MIT shock
-% tic;
-% [sol, stats]        = find_ss(options, glob, params, [], 0);
-% toc;
-% tic;
-% % [paths, statst]     = transition_Ashock(options, glob, params, sol, stats, -0.01, 0.05);
-% [paths, statst]     = transition_Kshock(options, glob, params, sol, stats, -0.01);
-% toc;
-% 
-% show_plots_mit(options, glob, params, stats, paths, statst);
-% 
-% return
+tic;
+[sol, stats]        = find_ss(options, glob, params, [], 0);
+toc;
+tic;
+[paths, statst]     = transition_Ashock_newton(options, glob, params, sol, stats, -0.01, 0.05);
+toc;
+
+show_plots_mit(options, glob, params, stats, paths, statst);
+
+return
 
 %% Comparative statics
 tic;
