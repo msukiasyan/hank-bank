@@ -14,6 +14,7 @@ function stats = calc_stats(opt, glob, p, s)
     dep_vec         = reshape(s.dpol, p.Nb * p.Na * p.Nz, 1);
     V_vec           = reshape(s.V, p.Nb * p.Na * p.Nz, 1);
     wt              = p.dtildea_vec .* p.dtildeb_vec .* dist_vec;
+    wt_array        = reshape(wt, p.Nb, p.Na, p.Nz);
     
     Rb              = p.r_plus .* (p.bbb > 0) + p.r_minus .* (p.bbb < 0);
     Ra              = p.r_F .* ones(p.Nb, p.Na, p.Nz);
@@ -56,6 +57,12 @@ function stats = calc_stats(opt, glob, p, s)
     total_inc_mean_p    = sum(wt .* total_inc .* (p.aindfrombaz == 1)) / sum(wt .* (p.aindfrombaz == 1));
     
     %% Inequality
+    
+    % Marginals
+    b_marg                  = sum(wt_array, [2, 3]);
+    a_marg                  = sum(wt_array, [1, 3]);
+    z_marg                  = sum(wt_array, [1, 2]);
+    
     [cons_vec_sorted, ord]  = sort(cons_vec);
     dcons_vec       = 0.5 * [cons_vec_sorted(1); 
                             cons_vec_sorted(3:end) - cons_vec_sorted(1:end - 2); 
@@ -77,10 +84,10 @@ function stats = calc_stats(opt, glob, p, s)
     b_marg_cum      = cumsum(wt(ord));
     b_gini          = sum(b_marg_cum .* (1 - b_marg_cum) .* db_vec) / (TD + TB);
     
-    a10             = prctilew(p.afrombaz, wt, 0.1);
-    a90             = prctilew(p.afrombaz, wt, 0.9);
-    b10             = prctilew(p.bfrombaz, wt, 0.1);
-    b90             = prctilew(p.bfrombaz, wt, 0.9);
+    a10             = prctilew(p.a, a_marg, 0.1);
+    a90             = prctilew(p.a, a_marg, 0.9);
+    b10             = prctilew(p.b, b_marg, 0.1);
+    b90             = prctilew(p.b, b_marg, 0.9);
     c10             = prctilew(cons_vec, wt, 0.1);
     c90             = prctilew(cons_vec, wt, 0.9);
     b_var           = sum((p.bfrombaz - TD - TB) .^ 2 .* wt);

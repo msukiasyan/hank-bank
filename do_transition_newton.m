@@ -10,6 +10,9 @@ function [paths, statst]  = do_transition_newton(opt, glob, p, init_state, final
     
     % wrt Kt
     for t = 1:p.Nt
+        if opt.debug_trans >= 1 && mod(t, 10) == 0
+            disp(['Calculating Jacobian: ', int2str(t) '/' num2str(2 * p.Nt)  ]);
+        end
         guesses0.Kt         = ones(p.Nt, 1) * final_ss.K;
         guesses0.Kt(t)      = guesses0.Kt(t) + opt.stepK_nt;
         
@@ -20,6 +23,9 @@ function [paths, statst]  = do_transition_newton(opt, glob, p, init_state, final
     
     % wrt x_at
     for t = 1:p.Nt
+        if opt.debug_trans >= 1 && mod(p.Nt + t, 10) == 0
+            disp(['Calculating Jacobian: ', int2str(p.Nt + t) '/' num2str(2 * p.Nt)  ]);
+        end
         guesses0.x_at       = ones(p.Nt, 1) * final_ss.x_a;
         guesses0.x_at(t)    = guesses0.x_at(t) + opt.stepx_a_nt;
         

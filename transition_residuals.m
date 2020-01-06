@@ -63,58 +63,19 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
         end
     end
     
-    %% Solve HJB backward
-    for t = p.Nt-1:-1:1
-        p.r_plus                            = r_plust(t);
-        p.r_minus                           = r_minust(t);
-        p.r_F                               = r_Ft(t);
-        if opt.GK
-           p.r_F    = p.r_F * NWt(t);
-        end
-        p.w                                 = wt(t);
-        [Vt{t}, dt{t}, ct{t}, ~, BU(t, :)]  = hjb_update(opt, glob, p, Vt{t + 1}, p.dt(t));
-    end
-
-    %% Solve KFE forward
-    gtilde{1}               = reshape(init_state.gvec .* (p.dtildea_vec .* p.dtildeb_vec), p.Nb * p.Na, p.Nz);
-    gt{1}                   = reshape(init_state.gvec, p.Nb, p.Na, p.Nz);
-    for t = 1:p.Nt-1
-        lmat                = eye(p.Nz, p.Nz) + p.dt(t) * p.la_mat_offdiag;
-        gtilde{t + 1}       = zeros(p.Nb * p.Na, p.Nz);
-        for nz = 1:p.Nz
-            vec             = gtilde{t} * lmat(:, nz);
-            B               = (1.0 - p.dt(t) * p.la_mat(nz, nz)) * speye(p.Nb * p.Na) - p.dt(t) * BU{t, nz}';
-
-            gtilde{t + 1}(:, nz)    = B \ vec;
-        end
-        gt{t + 1}           = reshape(gtilde{t + 1}, p.Nb * p.Na * p.Nz, 1);
-        gt{t + 1}           = reshape(gt{t + 1} ./ (p.dtildea_vec .* p.dtildeb_vec), p.Nb, p.Na, p.Nz);
-    end
+    %% Calculate the transition and stats
+    agg_paths.r_plust       = r_plust;
+    agg_paths.r_minust      = r_minust;
+    agg_paths.r_Ft          = r_Ft;
+    agg_paths.wt            = wt;
     
-    %% Get statistics
-    for t = 1:p.Nt
-        pars                = p;
-        pars.r_plus         = r_plust(t);
-        pars.r_minus        = r_minust(t);
-        pars.r_F            = r_Ft(t);
-        if opt.GK
-           pars.aaa         = p.aaa * NWt(t);
-           pars.afrombaz    = p.afrombaz * NWt(t);
-        end
-        pars.w              = wt(t);
-        
-        statst{t}           = calc_stats(opt, glob, pars, struct('dst', gt{t}, 'cpol', ct{t}, 'dpol', dt{t}, 'V', Vt{t}));
-        TSt(t)              = statst{t}.TS;
-        TBt(t)              = statst{t}.TB;
-        TDt(t)              = statst{t}.TD;
-        statst{t}.r_plus    = r_plust(t);
-        statst{t}.r_minus   = r_minust(t);
-        statst{t}.spread    = spreadt(t);
-        if opt.GK
-            statst{t}.TS    = NWt(t);
-        end
-    end
+    statst                  = transition_households(opt, glob, p, agg_paths, init_state, final_ss);
+    
     %% residuals
+    TSt                     = arrayfun(@(x) statst{x}.TS, (1:p.Nt)');
+    TBt                     = arrayfun(@(x) statst{x}.TB, (1:p.Nt)');
+    TDt                     = arrayfun(@(x) statst{x}.TD, (1:p.Nt)');
+    
     if opt.GK
         TSt                 = NWt;
     end
