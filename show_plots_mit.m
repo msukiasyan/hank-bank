@@ -123,5 +123,14 @@ function show_plots_mit(opt, glob, p, stats, paths, statst)
     xlabel('Quarters');
     ylabel('Percent dev.');
     title('Total income');
+    
+    subplot(4, 3, 12);
+    plot(p.tgrid(1:26), cellfun(@(x) x.w, statst(1:26)) / stats.w * 100 - 100, ...
+        'LineWidth', 1.5);
+    xlabel('Quarters');
+    ylabel('Percent dev.');
+    title('Wage');
+    
+    set(findobj(gcf,'type','axes'), 'XGrid', 'on', 'YGrid', 'on');
 
 end
