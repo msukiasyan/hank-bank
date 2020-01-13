@@ -13,19 +13,46 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     TBt             = zeros(p.Nt, 1);
     TDt             = zeros(p.Nt, 1);
     NWt             = zeros(p.Nt, 1);
+    qt              = zeros(p.Nt, 1);
+    Psit            = zeros(p.Nt, 1);
+    iotat           = zeros(p.Nt, 1);
+    r_minust        = zeros(p.Nt, 1);
     
     %% Final period
     BUt(p.Nt, :)    = final_ss.BU;
     Vt{p.Nt}        = final_ss.V;
     ct{p.Nt}        = final_ss.cpol;
     dt{p.Nt}        = final_ss.dpol;
+    qt(p.Nt)        = 1;
+    r_minust(p.Nt)  = final_ss.r_minus;
     
     %% Guesses
     x_at            = guesses.x_at;
     Kt              = guesses.Kt;
     
-    %% r_minus and w from K
-    r_minust        = prod_K(opt, glob, p, Kt) - p.delta;
+    %% Investment and capital price
+    for t = 1:p.Nt-1
+        Psit(t)     = (Kt(t + 1) - Kt(t)) / Kt(t) / p.dt(t) + p.delta;
+        iotat(t)     = cap_prod_inv(opt, glob, p, Psit(t));
+        qt(t)       = q_from_iota(opt, glob, p, iotat(t));
+    end
+    
+    %% Adjust the initial distribution to reflect the change of q on impact
+    N_change        = 1 - (1 - qt(1) / 1) * (init_state.NW + init_state.TD - init_state.TB) / init_state.NW;
+    for nb = 1:p.Nb
+        for nz = 1:p.Nz
+            init_state.dst(nb, :, nz)   = adjust_dist_prop(opt, glob, p, p.a, p.dtildea, init_state.dst(nb, :, nz), N_change);
+        end
+    end
+    init_state.gvec     = reshape(init_state.dst, p.Nb * p.Na * p.Nz, 1);
+    
+    %% Return on capital
+    mpk             = prod_K(opt, glob, p, Kt);
+    for t = 1:p.Nt-1
+        r_minust(t) = (mpk(t) - iotat(t)) / qt(t) + Psit(t) - p.delta + (qt(t + 1) - qt(t)) / p.dt(t);
+    end
+    
+    %% Wage from K
     wt              = prod_L(opt, glob, p, Kt);
     
     %% eta from leverage
@@ -71,6 +98,10 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     
     statst                  = transition_households(opt, glob, p, agg_paths, init_state, final_ss);
     
+    for t = 1:p.Nt
+        statst{t}.q         = qt(t);
+    end
+    
     %% residuals
     TSt                     = arrayfun(@(x) statst{x}.TS, (1:p.Nt)');
     TBt                     = arrayfun(@(x) statst{x}.TB, (1:p.Nt)');
@@ -80,7 +111,7 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
         TSt                 = NWt;
     end
     
-    Kt1                     = x_at .* TSt - TBt;
+    Kt1                     = (x_at .* TSt - TBt) ./ qt;
     res.K                   = Kt1 ./ Kt - 1;
     
     x_at1                   = TDt ./ TSt + 1;

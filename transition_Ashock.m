@@ -7,6 +7,8 @@ function [paths, statst]  = transition_Ashock(opt, glob, p, sol, stats, sz, pers
     init_state          = sol;
     init_state.gvec     = reshape(init_state.dst, p.Nb * p.Na * p.Nz, 1);
     init_state.NW       = stats.NW;
+    init_state.TB       = stats.TB;
+    init_state.TD       = stats.TD;
     
     final_ss            = sol;
     final_ss.eta        = stats.eta;

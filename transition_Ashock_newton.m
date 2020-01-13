@@ -7,10 +7,13 @@ function [paths, statst]  = transition_Ashock_newton(opt, glob, p, sol, stats, s
     init_state          = sol;
     init_state.gvec     = reshape(init_state.dst, p.Nb * p.Na * p.Nz, 1);
     init_state.NW       = stats.NW;
+    init_state.TB       = stats.TB;
+    init_state.TD       = stats.TD;
     
     final_ss            = sol;
     final_ss.eta        = stats.eta;
     final_ss.r_plus     = stats.r_plus;
+    final_ss.r_minus    = stats.r_minus;
     final_ss.spread     = stats.spread;
     final_ss.NW         = stats.NW;
     final_ss.K          = stats.K;

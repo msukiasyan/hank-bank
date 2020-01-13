@@ -16,6 +16,7 @@ params.delta        = 0.07 / 4;
 params.rho_bank     = -log(0.98);
 params.f_bank       = 0.02;
 params.theta_bank   = 0.3;
+params.kappa        = 10;
 params.mu           = 0.0;                  % fraction of illiquid assets held in "illiquid deposits"
 
 % Income process
@@ -150,26 +151,26 @@ params              = setup(options, glob, params);
 % return
 
 %% MIT shock to illiquid stock
-tic;
-[sol, stats]        = find_ss(options, glob, params, [], 0);
-toc;
-tic;
-[paths, statst]     = transition_Nshock_newton(options, glob, params, sol, stats, stats.NW * 0.95);
-show_plots_mit(options, glob, params, stats, paths, statst);
-toc;
-return
-
-%% MIT shock
 % tic;
 % [sol, stats]        = find_ss(options, glob, params, [], 0);
 % toc;
 % tic;
-% [paths, statst]     = transition_Ashock_newton(options, glob, params, sol, stats, -0.01, 0.05);
-% toc;
-% 
+% [paths, statst]     = transition_Nshock_newton(options, glob, params, sol, stats, stats.NW * 0.95);
 % show_plots_mit(options, glob, params, stats, paths, statst);
-% 
+% toc;
 % return
+
+%% MIT shock
+tic;
+[sol, stats]        = find_ss(options, glob, params, [], 0);
+toc;
+tic;
+[paths, statst]     = transition_Ashock_newton(options, glob, params, sol, stats, -0.01, 0.05);
+toc;
+
+show_plots_mit(options, glob, params, stats, paths, statst);
+
+return
 
 %% Comparative statics
 tic;
