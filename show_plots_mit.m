@@ -25,7 +25,7 @@ function show_plots_mit(opt, glob, p, stats, paths, statst)
     title('Capital');
     
     subplot(4, 3, 2);
-    plot(p.tgrid(1:26), paths.Kt(1:26) .^ p.alpha / stats.K ^ p.alpha * 100 - 100, 'LineWidth', 1.5);
+    plot(p.tgrid(1:26), cellfun(@(x) x.Y, statst(1:26)) / statst{p.Nt}.Y * 100 - 100, 'LineWidth', 1.5);
     xlabel('Quarters');
     ylabel('Percent dev.');
     title('Output');

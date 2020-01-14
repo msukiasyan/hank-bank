@@ -33,7 +33,7 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     %% Investment and capital price
     for t = 1:p.Nt-1
         Psit(t)     = (Kt(t + 1) - Kt(t)) / Kt(t) / p.dt(t) + p.delta;
-        iotat(t)     = cap_prod_inv(opt, glob, p, Psit(t));
+        iotat(t)    = cap_prod_inv(opt, glob, p, Psit(t));
         qt(t)       = q_from_iota(opt, glob, p, iotat(t));
     end
     
@@ -49,7 +49,7 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     %% Return on capital
     mpk             = prod_K(opt, glob, p, Kt);
     for t = 1:p.Nt-1
-        r_minust(t) = (mpk(t) - iotat(t)) / qt(t) + Psit(t) - p.delta + (qt(t + 1) - qt(t)) / p.dt(t);
+        r_minust(t) = (mpk(t) - iotat(t) + (qt(t + 1) - qt(t)) / p.dt(t)) / qt(t) + Psit(t) - p.delta;
     end
     
     %% Wage from K
@@ -97,9 +97,11 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     agg_paths.wt            = wt;
     
     statst                  = transition_households(opt, glob, p, agg_paths, init_state, final_ss);
+    Yt                      = p.Aprod .* Kt .^ p.alpha;
     
     for t = 1:p.Nt
         statst{t}.q         = qt(t);
+        statst{t}.Y         = Yt(t);
     end
     
     %% residuals
