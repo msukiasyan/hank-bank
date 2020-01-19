@@ -23,6 +23,7 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
     %% Aggregates
     r_plust         = agg_paths.r_plust;
     r_minust        = agg_paths.r_minust;
+    x_at            = agg_paths.x_at;
     r_Ft            = agg_paths.r_Ft;
     wt              = agg_paths.wt;
     
@@ -59,7 +60,8 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
         pars                = p;
         pars.r_plus         = r_plust(t);
         pars.r_minus        = r_minust(t);
-        pars.r_F            = r_Ft(t);
+        pars.x_a            = x_at(t);
+    
         if opt.GK
            pars.aaa         = p.aaa * NWt(t);
            pars.afrombaz    = p.afrombaz * NWt(t);
@@ -70,11 +72,11 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
         TSt(t)              = statst{t}.TS;
         TBt(t)              = statst{t}.TB;
         TDt(t)              = statst{t}.TD;
-        statst{t}.r_plus    = r_plust(t);
-        statst{t}.r_minus   = r_minust(t);
-        statst{t}.r_F       = r_Ft(t);
+%         statst{t}.r_plus    = r_plust(t);
+%         statst{t}.r_minus   = r_minust(t);
+%         statst{t}.r_F       = r_Ft(t);
         statst{t}.w         = wt(t);
-        statst{t}.spread    = r_minust(t) - r_plust(t);
+%         statst{t}.spread    = r_minust(t) - r_Xt(t);
         if opt.GK
             statst{t}.TS    = NWt(t);
         end

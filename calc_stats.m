@@ -33,11 +33,16 @@ function stats = calc_stats(opt, glob, p, s)
     TD              = sum(wt .* p.bfrombaz .* (p.bfrombaz > 0));
     TB              = sum(wt .* p.bfrombaz .* (p.bfrombaz < 0));
     TS              = sum(wt .* p.afrombaz);
-    NW              = TS;                                           % Net worth = Total illiquid assets
-    cons_mean       = sum(wt .* cons_vec);
-    total_inc_mean  = sum(wt .* total_inc);
+    NW              = TS / (1 + p.mu_bank * (p.x_a - 1));                                              % Net worth = Illiquid - p.mu_bank * deposits 
+    TD_bank         = (p.x_a - 1) * NW ;   
+    
+    
     a_mean          = TS;
     b_mean          = TD + TB;
+    LIQ_ILLIQ       = b_mean / a_mean;
+    
+    cons_mean       = sum(wt .* cons_vec);
+    total_inc_mean  = sum(wt .* total_inc);
     V_mean          = sum(wt .* V_vec);
     
     for nz = 1:p.Nz
@@ -109,6 +114,8 @@ function stats = calc_stats(opt, glob, p, s)
     stats.TBz       = TBz;
     stats.TSz       = TSz;
     stats.NW        = NW;
+    stats.TD_bank   = TD_bank;
+    stats.LIQ_ILLIQ = LIQ_ILLIQ;
     stats.cons_mean = cons_mean;
     stats.a_mean    = a_mean;
     stats.b_mean    = b_mean;

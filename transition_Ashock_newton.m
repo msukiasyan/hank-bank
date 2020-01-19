@@ -9,11 +9,13 @@ function [paths, statst]  = transition_Ashock_newton(opt, glob, p, sol, stats, s
     init_state.NW       = stats.NW;
     init_state.TB       = stats.TB;
     init_state.TD       = stats.TD;
-    
+    init_state.TD_bank  = stats.TD_bank;
     final_ss            = sol;
     final_ss.eta        = stats.eta;
     final_ss.r_plus     = stats.r_plus;
     final_ss.r_minus    = stats.r_minus;
+    final_ss.r_F        = stats.r_F;
+    final_ss.r_X        = stats.r_X;
     final_ss.spread     = stats.spread;
     final_ss.NW         = stats.NW;
     final_ss.K          = stats.K;

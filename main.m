@@ -1,4 +1,4 @@
-clear all; close all; clc;
+clear all; clc;
 warning off
 
 %% Parameters
@@ -14,11 +14,11 @@ params.Aprod        = 1.0;
 params.alpha        = 0.33;
 params.delta        = 0.07 / 4;
 params.rho_bank     = -log(0.98);
-params.f_bank       = 0.02;
-params.theta_bank   = 0.3;
-params.kappa        = 10;
+params.f_bank       = 0.04;
+params.theta_bank   = 0.1;
+params.kappa        = 1;
 params.mu           = 0.0;                  % fraction of illiquid assets held in "illiquid deposits"
-
+params.mu_bank      = 0.0;                  % fraction of bank deposits being illiquid
 % Income process
 params.Nz           = 3;
 params.zfactor      = 1.0;
@@ -31,7 +31,7 @@ params.la_mat       = [-0.05, 0.05, 0.00; ...
                         0.0, 0.05, -0.05];
 
 params.dmax         = 1e10;
-params.crit         = 10^(-8);
+params.crit         = 10^(-9);
 params.critKFE      = 10^(-12);
 params.Delta        = 1000000.0;
 params.DeltaKFE     = 1000.0;
@@ -53,7 +53,7 @@ params.amax         = 2000;
 params.dtcurve      = 1 / 0.5;
 params.Ndt          = 50;
 params.dtmin        = 1 / 3;
-params.dtmax        = 150;
+params.dtmax        = 120;
 
 %% GK (family) parameters
 params.distGK       = "twopoint";
@@ -62,7 +62,7 @@ params.fracGK       = 1.00;          % Fraction of people having bank ownership
 params.MGK          = 0.1;
 
 %% Options
-options.maxit       = 700;
+options.maxit       = 2000;
 options.maxitKFE    = 50000;
 options.debug_v     = 1;
 options.debug_eq    = 1;
@@ -77,7 +77,7 @@ options.GK          = 0;                         % If 1, must also be that divto
 options.stepK_nt    = 1e-4;
 options.stepx_a_nt  = 1e-5;
 options.tol_nt      = 1e-10;
-options.maxittrans_nt   = 100;
+options.maxittrans_nt   = 140;
 options.debug_trans = 1;
 
 %% Setup
@@ -168,23 +168,25 @@ tic;
 [paths, statst]     = transition_Ashock_newton(options, glob, params, sol, stats, -0.01, 0.05);
 toc;
 
-show_plots_mit(options, glob, params, stats, paths, statst);
-
-return
+ show_plots_mit(options, glob, params, stats, paths, statst);
+% 
+% return
 
 %% Comparative statics
-tic;
-% cs_fracGK           = comp_stat(options, glob, params, 'fracGK', 0.05, 0.95, 10);
-% cs_theta_bank       = comp_stat(options, glob, params, 'theta_bank', 0.25, 0.35, 5);
-% cs_zfactor          = comp_stat(options, glob, params, 'zfactor', 0.9, 1.1, 5);
-% cs_f_bank           = comp_stat(options, glob, params, 'f_bank', params.f_bank * 0.95, params.f_bank * 1.05, 5);
-% cs_rho              = comp_stat(options, glob, params, 'rho', params.rho * 0.95, params.rho * 1.05, 5);
-% cs_rho_bank         = comp_stat(options, glob, params, 'rho_bank', params.rho_bank * 0.95, params.rho_bank * 1.05, 5);
-% cs_chi0             = comp_stat(options, glob, params, 'chi0', params.chi0 * 0.95, params.chi0 * 1.05, 5);
-% cs_Aprod            = comp_stat(options, glob, params, 'Aprod', params.Aprod * 0.95, params.Aprod * 1.05, 5);
-toc;
+% tic;
+% % cs_fracGK           = comp_stat(options, glob, params, 'fracGK', 0.05, 0.95, 10);
+% % cs_theta_bank       = comp_stat(options, glob, params, 'theta_bank', 0.25, 0.35, 5);
+% % cs_zfactor          = comp_stat(options, glob, params, 'zfactor', 0.9, 1.1, 5);
+% % cs_f_bank           = comp_stat(options, glob, params, 'f_bank', params.f_bank * 0.95, params.f_bank * 1.05, 5);
+% % cs_rho              = comp_stat(options, glob, params, 'rho', params.rho * 0.95, params.rho * 1.05, 5);
+% % cs_rho_bank         = comp_stat(options, glob, params, 'rho_bank', params.rho_bank * 0.95, params.rho_bank * 1.05, 5);
+% % cs_chi0             = comp_stat(options, glob, params, 'chi0', params.chi0 * 0.95, params.chi0 * 1.05, 5);
+% % cs_Aprod            = comp_stat(options, glob, params, 'Aprod', params.Aprod * 0.95, params.Aprod * 1.05, 5);
+% cs_mu_bank            = comp_stat(options, glob, params, 'mu_bank', 0,0.5, 5);
+% show_plots_cs(options, glob, params, cs_mu_bank)
+% toc;
 
 % load comp_stat.mat
 % save comp_stat.mat
-return
+
 
