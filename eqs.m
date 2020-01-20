@@ -12,7 +12,7 @@ function rs = eqs(opt, glob, p, inp)
     end
 %     p.r_bankeq  = p.r_F;
 %     p.r_F       = p.mu * p.r_plus + (1 - p.mu) * p.r_F;
-    sol         = get_policies(opt, glob, p);
+      sol         = get_policies(opt, glob, p);
     
     if ~sol.isvalid
         rs = 1e12;
@@ -22,7 +22,14 @@ function rs = eqs(opt, glob, p, inp)
     TD              = 0;
     TB              = 0;
     TS              = 0;
-    ldist           = cell(p.Nz,1);
+    p.dist_vec      = reshape(sol.dst, p.Nb * p.Na * p.Nz, 1);
+    wt              = p.dtildea_vec .* p.dtildeb_vec .* p.dist_vec;
+    h_vec           = reshape(sol.hpol, p.Nb * p.Na * p.Nz, 1);
+    z_vec           = reshape(p.zzz, p.Nb * p.Na * p.Nz, 1);
+    p.N             = sum(wt .* z_vec .* h_vec);   % labor supply
+    p.K             = p.N * p.K_N;        % get capital
+    
+    ldist           = cell(p.Nz,1); 
     ildist          = cell(p.Nz,1);
     for nz = 1:p.Nz
         ldist{nz}   = trapz(p.a, sol.dst(:, :, nz), 2);         % sum(sol.dst(:, :, nz), 2) * p.da;

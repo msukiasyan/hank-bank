@@ -1,4 +1,4 @@
-function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
+function [V1, dFinal, cFinal, h, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     isvalid     = true;
 
     %% Prepare objects
@@ -7,6 +7,7 @@ function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     VaF         = zeros(p.Nb, p.Na, p.Nz);
     VaB         = zeros(p.Nb, p.Na, p.Nz);
     c           = zeros(p.Nb, p.Na, p.Nz);
+    h           = zeros(p.Nb, p.Na, p.Nz);
     updiag      = zeros(p.Nb * p.Na, p.Nz);
     lowdiag     = zeros(p.Nb * p.Na, p.Nz);
     centdiag    = zeros(p.Nb * p.Na, p.Nz);
@@ -32,13 +33,19 @@ function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
         adriftb = Ra .* p.aaa;
     end
     
+    
+    % labor supply - easy with GHH
+    
+    h                   = ((1 - p.xi) * p.w * p.zzz / p.disutil) .^ p.frisch;
+    lab_income          = p.w * p.zzz .* h;
+    
     %% Solve
     % Derivatives wrt b
     %   forward difference
     VbF(1:p.Nb - 1, :, :)   = (V(2:p.Nb, :, :) - V(1:p.Nb-1, :, :)) ./ p.dbF(1:p.Nb - 1);
     %   backward difference
     VbB(2:p.Nb, :, :)       = (V(2:p.Nb, :, :) - V(1:p.Nb - 1, :, :)) ./ p.dbB(2:p.Nb);
-    VbB(1, :, :)            = utility_prime((1 - p.xi) * p.w * p.zzz(1, :, :) + Rb(1, :, :) .* p.bmin + adriftb(1, :, :), opt, glob, p); %state constraint boundary condition
+    VbB(1, :, :)            = utility_prime((1 - p.xi) * lab_income(1, :, :) + Rb(1, :, :) .* p.bmin + adriftb(1, :, :), h(1, :, :), opt, glob, p); %state constraint boundary condition
 
     % Derivatives wrt a
     %   forward difference
@@ -52,9 +59,29 @@ function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     VaB(:, 2:p.Na, :)       = max(VaB(:, 2:p.Na, :), 1e-8);
 
     %useful quantities
-    c_B                 = VbB .^ (-1 / p.ga);
-    c_F                 = VbF .^ (-1 / p.ga);
-    c_0                 = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb + adriftb;
+    
+    
+    % first need to get labor supply
+    % here it is the same for all
+    % consumption levels!
+    
+    
+    % i am a bit confused about p.xi - this is something to figure out
+    % later
+    
+   
+    
+    c_B                 = VbB .^ (-1 / p.ga) + p.disutil * 1 / (1 + 1 / p.frisch) * h .^ (1 + 1 / p.frisch);
+    c_F                 = VbF .^ (-1 / p.ga) + p.disutil * 1 / (1 + 1 / p.frisch) * h .^ (1 + 1 / p.frisch);
+    
+
+    
+
+    c_0                 = (1 - p.xi) * lab_income + Rb .* p.bbb + adriftb;
+    
+
+
+    
     dBB                 = optimal_deposit(VaB, VbB, p.aaa, opt, glob, p);
     dFB                 = optimal_deposit(VaB, VbF, p.aaa, opt, glob, p);
     dBF                 = optimal_deposit(VaF, VbB, p.aaa, opt, glob, p);
@@ -105,22 +132,22 @@ function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     sdFinal             = -(dFinal + adjustment_cost(dFinal, p.aaa, opt, glob, p));
 
     %% Determine consumption
-    sc_B                = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - c_B + adriftb;
+    sc_B                = (1 - p.xi) * lab_income + Rb .* p.bbb - c_B + adriftb;
     validB              = true(p.Nb, p.Na, p.Nz);
-    vcB                 = utility(c_B, opt, glob, p) + VbB .* sc_B;
+    vcB                 = utility(c_B, h, opt, glob, p) + VbB .* sc_B;
     validB(1, :, :)     = 0;
     vcB(1, :, :)        = -1e20;
     validB              = validB & (sc_B < 0);
 
-    sc_F                = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - c_F + adriftb;
+    sc_F                = (1 - p.xi) * lab_income + Rb .* p.bbb - c_F + adriftb;
     validF              = true(p.Nb, p.Na, p.Nz);
-    vcF                 = utility(c_F, opt, glob, p) + VbF .* sc_F;
+    vcF                 = utility(c_F, h, opt, glob, p) + VbF .* sc_F;
     validF(p.Nb, :, :)  = 0;
     vcF(p.Nb, :, :)     = -1e20;
     validF              = validF & (sc_F > 0);
 
     sc_0                = 0;
-    vc0                 = utility(c_0, opt, glob, p);
+    vc0                 = utility(c_0, h, opt, glob, p);
 
     cFinal              = zeros(p.Nb, p.Na, p.Nz);
     curvc               = ones(p.Nb, p.Na, p.Nz) * (-1e20);
@@ -135,9 +162,9 @@ function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     cFinal(indmat)      = c_F(indmat);
 
 
-    scFinal             = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - cFinal + adriftb;
+    scFinal             = (1 - p.xi) * lab_income + Rb .* p.bbb - cFinal + adriftb;
 
-    u                   = utility(cFinal, opt, glob, p);
+    u                   = utility(cFinal, h, opt, glob, p);
 
     %CONSTRUCT MATRIX BB SUMMARING EVOLUTION OF b
     X                   = -(min(scFinal, 0) + min(sdFinal, 0)) ./ p.dbB;
@@ -168,7 +195,7 @@ function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
 
     % CONSTRUCT MATRIX AA SUMMARIZING EVOLUTION OF a
     MB                  = min(dFinal, 0);
-    MF                  = max(dFinal, 0) + p.xi * p.w * p.zzz;
+    MF                  = max(dFinal, 0) + p.xi * lab_income;
     if ~opt.divtoliq
         MF              = MF + Ra .* p.aaa;
     end
@@ -212,8 +239,8 @@ function [V1, dFinal, cFinal, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     if nargout > 4                                                          
         d               = dFinal;
         d(p.Nb, :, :)   = d(p.Nb - 1, :, :);
-        m               = d + p.xi * p.w * p.zzz;
-        s               = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - d - adjustment_cost(d, p.aaa, opt, glob, p) - cFinal;
+        m               = d + p.xi * lab_income;
+        s               = (1 - p.xi) * lab_income + Rb .* p.bbb - d - adjustment_cost(d, p.aaa, opt, glob, p) - cFinal;
 
         if ~opt.divtoliq
             m           = m + Ra .* p.aaa;

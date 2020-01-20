@@ -31,7 +31,7 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     %% Guesses
     x_at            = guesses.x_at;
     Kt              = guesses.Kt;
-    
+    Nt              = guesses.Nt;
     %% Investment and capital price
     for t = 1:p.Nt-1
         Psit(t)     = (Kt(t + 1) - Kt(t)) / Kt(t) / p.dt(t) + p.delta;
@@ -49,13 +49,13 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     init_state.gvec     = reshape(init_state.dst, p.Nb * p.Na * p.Nz, 1);
     
     %% Return on capital
-    mpk             = prod_K(opt, glob, p, Kt);
+    mpk             = prod_K(opt, glob, p, Kt, Nt);
     for t = 1:p.Nt-1
         r_minust(t) = (mpk(t) - iotat(t) + (qt(t + 1) - qt(t)) / p.dt(t)) / qt(t) + Psit(t) - p.delta;
     end
     
     %% Wage from K
-    wt              = prod_L(opt, glob, p, Kt);
+    wt              = prod_L(opt, glob, p, Kt, Nt);
     
     %% eta from leverage
     etat            = x_at * p.theta_bank;
@@ -102,8 +102,9 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     agg_paths.r_Xt          = r_Xt;
     agg_paths.wt            = wt;
     agg_paths.x_at          = x_at;
+    agg_paths.K_Nt          = Kt ./ Nt;
     statst                  = transition_households(opt, glob, p, agg_paths, init_state, final_ss);
-    Yt                      = p.Aprod .* Kt .^ p.alpha;
+    Yt                      = p.Aprod .* Kt .^ p.alpha .* Nt .^ (1 - p.alpha);
     
     for t = 1:p.Nt
         statst{t}.q         = qt(t);
@@ -114,6 +115,7 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     TSt                     = arrayfun(@(x) statst{x}.TS, (1:p.Nt)');
     TBt                     = arrayfun(@(x) statst{x}.TB, (1:p.Nt)');
     TDt                     = arrayfun(@(x) statst{x}.TD, (1:p.Nt)');
+    Nt1                     = arrayfun(@(x) statst{x}.N, (1:p.Nt)');
     
     NWt              =  TSt ./ (1 + p.mu_bank * (x_at - 1));                                              % Net worth = Illiquid - p.mu_bank * deposits 
     TD_bankt         =  TSt - NWt + TDt ;
@@ -126,7 +128,8 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     res.K                   = Kt1 ./ Kt - 1;
     
     x_at1                   = TD_bankt ./ NWt + 1;
-    %x_at1                   = TD_bankt ./ TSt + 1;
+    %x_at1                  = TD_bankt ./ TSt + 1;
     res.x_a                 = x_at1 ./ x_at - 1;
+    res.N                   = Nt1 ./ Nt - 1;
     
 end

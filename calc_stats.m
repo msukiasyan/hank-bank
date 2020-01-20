@@ -11,14 +11,19 @@ function stats = calc_stats(opt, glob, p, s)
     ildist_total    = zeros(1, p.Na);
     dist_vec        = reshape(s.dst, p.Nb * p.Na * p.Nz, 1);
     cons_vec        = reshape(s.cpol, p.Nb * p.Na * p.Nz, 1);
+    h_vec           = reshape(s.hpol, p.Nb * p.Na * p.Nz, 1);
     dep_vec         = reshape(s.dpol, p.Nb * p.Na * p.Nz, 1);
     V_vec           = reshape(s.V, p.Nb * p.Na * p.Nz, 1);
     wt              = p.dtildea_vec .* p.dtildeb_vec .* dist_vec;
     wt_array        = reshape(wt, p.Nb, p.Na, p.Nz);
-    
+    z_vec           = reshape(p.zzz, p.Nb * p.Na * p.Nz, 1);
+    N               = sum(wt .* z_vec .* h_vec);   % labor supply
+    K               = N * p.K_N;        % get capital
+
+  
     Rb              = p.r_plus .* (p.bbb > 0) + p.r_minus .* (p.bbb < 0);
     Ra              = p.r_F .* ones(p.Nb, p.Na, p.Nz);
-    total_inc       = reshape(p.w * p.zzz + Rb .* p.bbb + Ra .* p.aaa, p.Nb * p.Na * p.Nz, 1);
+    total_inc       = reshape(p.w * p.zzz .* s.hpol + Rb .* p.bbb + Ra .* p.aaa, p.Nb * p.Na * p.Nz, 1);
     
     %% Marginal distributions
     for nz = 1:p.Nz
@@ -141,4 +146,6 @@ function stats = calc_stats(opt, glob, p, s)
     stats.a90       = a90;
     stats.b10       = b10;
     stats.b90       = b90;
+    stats.K         = K;
+    stats.N         = N;
 end

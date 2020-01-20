@@ -18,6 +18,7 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
     BUt(p.Nt, :)    = final_ss.BU;
     Vt{p.Nt}        = final_ss.V;
     ct{p.Nt}        = final_ss.cpol;
+    ht{p.Nt}        = final_ss.hpol;
     dt{p.Nt}        = final_ss.dpol;
     
     %% Aggregates
@@ -26,7 +27,7 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
     x_at            = agg_paths.x_at;
     r_Ft            = agg_paths.r_Ft;
     wt              = agg_paths.wt;
-    
+    K_Nt            = agg_paths.K_Nt;
     %% Solve HJB backward
     for t = p.Nt-1:-1:1
         p.r_plus                            = r_plust(t);
@@ -36,7 +37,7 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
            p.r_F    = p.r_F * NWt(t);
         end
         p.w                                 = wt(t);
-        [Vt{t}, dt{t}, ct{t}, ~, BU(t, :)]  = hjb_update(opt, glob, p, Vt{t + 1}, p.dt(t));
+        [Vt{t}, dt{t}, ct{t}, ht{t}, ~, BU(t, :)]  = hjb_update(opt, glob, p, Vt{t + 1}, p.dt(t));
     end
 
     %% Solve KFE forward
@@ -61,6 +62,7 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
         pars.r_plus         = r_plust(t);
         pars.r_minus        = r_minust(t);
         pars.x_a            = x_at(t);
+        pars.K_N            = K_Nt(t);
     
         if opt.GK
            pars.aaa         = p.aaa * NWt(t);
@@ -68,9 +70,10 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
         end
         pars.w              = wt(t);
         
-        statst{t}           = calc_stats(opt, glob, pars, struct('dst', gt{t}, 'cpol', ct{t}, 'dpol', dt{t}, 'V', Vt{t}));
+        statst{t}           = calc_stats(opt, glob, pars, struct('dst', gt{t}, 'cpol', ct{t}, 'hpol', ht{t}, 'dpol', dt{t}, 'V', Vt{t}));
         TSt(t)              = statst{t}.TS;
         TBt(t)              = statst{t}.TB;
+        TDt(t)              = statst{t}.TD;
         TDt(t)              = statst{t}.TD;
 %         statst{t}.r_plus    = r_plust(t);
 %         statst{t}.r_minus   = r_minust(t);

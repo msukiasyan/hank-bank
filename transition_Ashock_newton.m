@@ -2,6 +2,7 @@ function [paths, statst]  = transition_Ashock_newton(opt, glob, p, sol, stats, s
     if nargin < 8
         guesses0.Kt         = ones(p.Nt, 1) * stats.K;
         guesses0.x_at       = repmat(stats.x_a, p.Nt, 1);
+        guesses0.Nt         = ones(p.Nt, 1) * stats.N;
     end
     
     init_state          = sol;
@@ -20,7 +21,7 @@ function [paths, statst]  = transition_Ashock_newton(opt, glob, p, sol, stats, s
     final_ss.NW         = stats.NW;
     final_ss.K          = stats.K;
     final_ss.x_a        = stats.x_a;   
-    
+    final_ss.N          = stats.N;  
     if opt.GK
         p.NW                = 1;            % Make sure p.a is not distorted, because we want to 
                                             % lump changes in NW into r_F (more accurate)

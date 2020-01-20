@@ -19,6 +19,10 @@ params.theta_bank   = 0.1;
 params.kappa        = 1;
 params.mu           = 0.0;                  % fraction of illiquid assets held in "illiquid deposits"
 params.mu_bank      = 0.0;                  % fraction of bank deposits being illiquid
+params.disutil      = 6.0;                  % labor disutility parameter
+params.frisch       = 2.0;                  % Frisch elasticity of labor supply
+
+
 % Income process
 params.Nz           = 3;
 params.zfactor      = 1.0;
@@ -46,12 +50,12 @@ params.acurve       = 1 / 0.15;
 params.bcurve       = 1 / 0.35;
 params.Nb           = 40;
 params.bmin         = 0;
-params.bmax         = 140;
+params.bmax         = 150;
 params.Na           = 40;
 params.amin         = 0;
 params.amax         = 2000;
 params.dtcurve      = 1 / 0.5;
-params.Ndt          = 50;
+params.Ndt          = 100;
 params.dtmin        = 1 / 3;
 params.dtmax        = 120;
 
@@ -76,6 +80,7 @@ options.GK          = 0;                         % If 1, must also be that divto
 
 options.stepK_nt    = 1e-4;
 options.stepx_a_nt  = 1e-5;
+options.stepN_nt    = 1e-5;
 options.tol_nt      = 1e-10;
 options.maxittrans_nt   = 140;
 options.debug_trans = 1;

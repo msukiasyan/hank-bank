@@ -11,20 +11,24 @@ function sol = get_policies(opt, glob, p)
     gBu         = cell(p.Nz, 1);
     gBl         = cell(p.Nz, 1);
     cFinal      = zeros(p.Nb, p.Na, p.Nz);
+    hFinal      = zeros(p.Nb, p.Na, p.Nz);
     dFinal      = zeros(p.Nb, p.Na, p.Nz);
 
     %% Return at different points in state space
     Rb          = p.r_plus .* (p.bbb > 0) + p.r_minus .* (p.bbb < 0);
     Ra          = p.r_F .* ones(p.Nb, p.Na, p.Nz);
     
+    %% labor supply (GHH)
+    h           = ((1 - p.xi) * p.w * p.zzz / p.disutil) .^ p.frisch;
+    lab_income  =  p.w * p.zzz .* h;
     %% Initial guess
-    v0          = utility(((1 - p.xi) * p.w * p.zzz + max((Rb) .* p.bbb, 0)), opt, glob, p) / p.rho;
+    v0          = utility(((1 - p.xi) * lab_income + max((Rb) .* p.bbb, 0)),h, opt, glob, p) / p.rho;
     v           = v0;
     V           = v;
 
     %% Iterate
     for n = 1:opt.maxit
-        [V, dFinal, cFinal, u, BU]  = hjb_update(opt, glob, p, v, p.Delta);
+        [V, dFinal, cFinal, hFinal, u, BU]  = hjb_update(opt, glob, p, v, p.Delta);
         Vchange                     = V - v;
         v                           = V;
         dist(n)                     = max(max(max(abs(Vchange))));
@@ -86,10 +90,11 @@ function sol = get_policies(opt, glob, p)
     
     %% Pack
     sol.cpol            = cFinal;
+    sol.hpol            = hFinal;
     sol.dpol            = dFinal;
-    sol.apol            = dFinal + p.xi * p.w * p.zzz + Ra .* p.aaa;
-    sol.bpol            = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - dFinal - adjustment_cost(dFinal, p.aaa, opt, glob, p) - cFinal;
-    sol.sc              = (1 - p.xi) * p.w * p.zzz + Rb .* p.bbb - cFinal;
+    sol.apol            = dFinal + p.xi * lab_income + Ra .* p.aaa;
+    sol.bpol            = (1 - p.xi) * lab_income + Rb .* p.bbb - dFinal - adjustment_cost(dFinal, p.aaa, opt, glob, p) - cFinal;
+    sol.sc              = (1 - p.xi) * lab_income + Rb .* p.bbb - cFinal;
     sol.sd              = - dFinal - adjustment_cost(dFinal, p.aaa, opt, glob, p);
     sol.dst             = g;
     sol.gvec            = g_stacked;
