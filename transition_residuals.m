@@ -49,7 +49,8 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     %% Return on capital
     mpk             = prod_K(opt, glob, p, Kt);
     for t = 1:p.Nt-1
-        r_minust(t) = (mpk(t) - iotat(t) + (qt(t + 1) - qt(t)) / p.dt(t)) / qt(t) + Psit(t) - p.delta;
+        % r_minust(t) = (mpk(t) - iotat(t) + (qt(t + 1) - qt(t)) / p.dt(t)) / qt(t) + Psit(t) - p.delta;
+        r_minust(t) = (mpk(t) + (qt(t + 1) - qt(t)) / p.dt(t)) / qt(t) - p.delta;
     end
     
     %% Wage from K
@@ -102,6 +103,7 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     for t = 1:p.Nt
         statst{t}.q         = qt(t);
         statst{t}.Y         = Yt(t);
+        statst{t}.I         = iotat(t) * Kt(t);
     end
     
     %% residuals

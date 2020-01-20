@@ -5,7 +5,7 @@ warning off
 params.ga           = 2;                    % CRRA utility with parameter gamma
 params.rho          = 0.01272892513;        % discount rate
 % params.chi0         = 1e5;
-params.chi0         = 0.04383;
+params.chi0         = 0.1; %0.04383;
 params.chi1         = 0.95616994593;
 params.chi2         = 1.40176;
 params.chi3         = 0.03 *2.92/4.0;
@@ -13,10 +13,10 @@ params.xi           = 0.0000;               % fraction of income that is automat
 params.Aprod        = 1.0;
 params.alpha        = 0.33;
 params.delta        = 0.07 / 4;
-params.rho_bank     = -log(0.98);
+params.rho_bank     = -log(0.99); % -log(0.98)
 params.f_bank       = 0.02;
 params.theta_bank   = 0.3;
-params.kappa        = 10;
+params.kappa        = 5;
 params.mu           = 0.0;                  % fraction of illiquid assets held in "illiquid deposits"
 
 % Income process

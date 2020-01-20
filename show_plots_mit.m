@@ -125,7 +125,7 @@ function show_plots_mit(opt, glob, p, stats, paths, statst)
     title('Total income');
     
     subplot(4, 3, 12);
-    plot(p.tgrid(1:26), cellfun(@(x) x.w, statst(1:26)) / stats.w * 100 - 100, ...
+    plot(p.tgrid(1:26), cellfun(@(x) x.I, statst(1:26)) / (p.delta * stats.K) * 100 - 100, ...
         'LineWidth', 1.5);
     xlabel('Quarters');
     ylabel('Percent dev.');
