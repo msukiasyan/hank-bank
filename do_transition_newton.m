@@ -20,6 +20,7 @@ function [paths, statst]  = do_transition_newton(opt, glob, p, init_state, final
         res_vec             = [res.K; res.x_a; res.N];
         jac_for(:, t)       = (res_vec - res_ss_vec) / opt.stepK_nt;
     end
+    guesses0.Kt         = ones(p.Nt, 1) * final_ss.K;
     
     % wrt x_at
     for t = 1:p.Nt
@@ -33,6 +34,7 @@ function [paths, statst]  = do_transition_newton(opt, glob, p, init_state, final
         res_vec             = [res.K; res.x_a; res.N];
         jac_for(:, p.Nt + t)    = (res_vec - res_ss_vec) / opt.stepx_a_nt;
     end
+    guesses0.x_at       = ones(p.Nt, 1) * final_ss.x_a;
     
     % wrt labt
     for t = 1:p.Nt
@@ -44,8 +46,9 @@ function [paths, statst]  = do_transition_newton(opt, glob, p, init_state, final
         
         res                 = transition_residuals(opt, glob, p, guesses0, init_state, final_ss);
         res_vec             = [res.K; res.x_a; res.N];
-        jac_for(:, 2 * p.Nt + t)    = (res_vec - res_ss_vec) / opt.stepx_a_nt;
+        jac_for(:, 2 * p.Nt + t)    = (res_vec - res_ss_vec) / opt.stepN_nt;
     end
+    guesses0.Nt       = ones(p.Nt, 1) * final_ss.N;
     
     f                       = @(x) transition_residuals(opt, glob, p, x, init_state, final_ss);
     jac_for_inv             = inv(jac_for);

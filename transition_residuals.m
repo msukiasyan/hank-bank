@@ -58,16 +58,22 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     wt              = prod_L(opt, glob, p, Kt, Nt);
     
     %% eta from leverage
-    etat            = x_at * p.theta_bank;
+    etat            = x_at .* p.theta_bank;
 
     %% Use the differential equation for eta to get r_X
     r_Xt(p.Nt)      = final_ss.r_X;
     r_Ft(p.Nt)      = final_ss.r_F;
     r_plust(p.Nt)   = final_ss.r_plus;
+    if size(p.theta_bank, 1) == 1
+        p.theta_bank    = p.theta_bank * ones(p.Nt, 1);
+    end
+    if size(p.rho_bank, 1) == 1
+        p.rho_bank      = p.rho_bank * ones(p.Nt, 1);
+    end
 
     for t = p.Nt-1:-1:1
-        r_Xt(t)     = (r_minust(t) * etat(t) ^ 2 / p.theta_bank - etat(t) * (p.rho_bank + p.f_bank) + p.f_bank + (etat(t + 1) - etat(t)) / p.dt(t)) / (etat(t) ^ 2 / p.theta_bank - etat(t));
-        r_Ft(t)     = r_Xt(t) + (r_minust(t) - r_Xt(t)) * (etat(t) / p.theta_bank);
+        r_Xt(t)     = (r_minust(t) * etat(t) ^ 2 / p.theta_bank(t) - etat(t) * (p.rho_bank(t) + p.f_bank) + p.f_bank + (etat(t + 1) - etat(t)) / p.dt(t)) / (etat(t) ^ 2 / p.theta_bank(t) - etat(t));
+        r_Ft(t)     = r_Xt(t) + (r_minust(t) - r_Xt(t)) * (etat(t) / p.theta_bank(t));
         r_plust(t)  = (r_Xt(t) - p.mu_bank * r_Ft(t)) / (1 - p.mu_bank); 
     end
     
@@ -109,6 +115,7 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     for t = 1:p.Nt
         statst{t}.q         = qt(t);
         statst{t}.Y         = Yt(t);
+        statst{t}.I         = Kt(t) * iotat(t);
     end
     
     %% residuals
@@ -120,7 +127,7 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     NWt              =  TSt ./ (1 + p.mu_bank * (x_at - 1));                                              % Net worth = Illiquid - p.mu_bank * deposits 
     TD_bankt         =  TSt - NWt + TDt ;
     
-     if opt.GK
+    if opt.GK
         TSt                 = NWt;
     end
     

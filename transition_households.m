@@ -75,11 +75,11 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
         TBt(t)              = statst{t}.TB;
         TDt(t)              = statst{t}.TD;
         TDt(t)              = statst{t}.TD;
-%         statst{t}.r_plus    = r_plust(t);
-%         statst{t}.r_minus   = r_minust(t);
-%         statst{t}.r_F       = r_Ft(t);
+        statst{t}.r_plus    = r_plust(t);
+        statst{t}.r_minus   = r_minust(t);
+        statst{t}.r_F       = r_Ft(t);
         statst{t}.w         = wt(t);
-%         statst{t}.spread    = r_minust(t) - r_Xt(t);
+        statst{t}.spread    = r_minust(t) - r_plust(t);
         if opt.GK
             statst{t}.TS    = NWt(t);
         end

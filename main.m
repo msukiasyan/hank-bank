@@ -13,14 +13,14 @@ params.xi           = 0.0000;               % fraction of income that is automat
 params.Aprod        = 1.0;
 params.alpha        = 0.33;
 params.delta        = 0.07 / 4;
-params.rho_bank     = -log(0.98);
+params.rho_bank     = 0.02;
 params.f_bank       = 0.04;
-params.theta_bank   = 0.1;
-params.kappa        = 1;
+params.theta_bank   = 0.6;
+params.kappa        = 0.03;
 params.mu           = 0.0;                  % fraction of illiquid assets held in "illiquid deposits"
 params.mu_bank      = 0.0;                  % fraction of bank deposits being illiquid
 params.disutil      = 6.0;                  % labor disutility parameter
-params.frisch       = 2.0;                  % Frisch elasticity of labor supply
+params.frisch       = 1.0;                  % Frisch elasticity of labor supply
 
 
 % Income process
@@ -55,9 +55,9 @@ params.Na           = 40;
 params.amin         = 0;
 params.amax         = 2000;
 params.dtcurve      = 1 / 0.5;
-params.Ndt          = 100;
-params.dtmin        = 1 / 3;
-params.dtmax        = 120;
+params.Ndt          = 40;
+params.dtmin        = 1 / 5;
+params.dtmax        = 100;
 
 %% GK (family) parameters
 params.distGK       = "twopoint";
@@ -149,7 +149,7 @@ params              = setup(options, glob, params);
 % title('TD(ra; rb)');
 % return
 
-%% Find equilibrium
+%% Find steady state equilibrium
 % tic;
 % [sol, stats]        = find_ss(options, glob, params, [], 1);
 % toc;
@@ -173,9 +173,9 @@ tic;
 [paths, statst]     = transition_Ashock_newton(options, glob, params, sol, stats, -0.01, 0.05);
 toc;
 
- show_plots_mit(options, glob, params, stats, paths, statst);
-% 
-% return
+show_plots_mit(options, glob, params, stats, paths, statst);
+
+return
 
 %% Comparative statics
 % tic;
