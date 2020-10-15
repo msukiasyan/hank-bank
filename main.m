@@ -18,9 +18,9 @@ params.f_bank       = 0.04;
 params.theta_bank   = 0.1;
 params.kappa        = 1;
 params.mu           = 0.0;                  % fraction of illiquid assets held in "illiquid deposits"
-params.mu_bank      = 0.0;                  % fraction of bank deposits being illiquid
+params.mu_bank      = 0.7;                  % fraction of bank deposits being illiquid
 params.disutil      = 6.0;                  % labor disutility parameter
-params.frisch       = 2.0;                  % Frisch elasticity of labor supply
+params.frisch       = 0.5;                  % Frisch elasticity of labor supply
 
 
 % Income process

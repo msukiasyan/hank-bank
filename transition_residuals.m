@@ -105,10 +105,10 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     agg_paths.K_Nt          = Kt ./ Nt;
     statst                  = transition_households(opt, glob, p, agg_paths, init_state, final_ss);
     Yt                      = p.Aprod .* Kt .^ p.alpha .* Nt .^ (1 - p.alpha);
-    
+
     for t = 1:p.Nt
         statst{t}.q         = qt(t);
-        statst{t}.Y         = Yt(t);
+        statst{t}.Y         = Yt(t);  
     end
     
     %% residuals
@@ -119,6 +119,11 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     
     NWt              =  TSt ./ (1 + p.mu_bank * (x_at - 1));                                              % Net worth = Illiquid - p.mu_bank * deposits 
     TD_bankt         =  TSt - NWt + TDt ;
+    
+    % get Mt
+    for t = p.Nt-1:-1:1
+      statst{t}.Mt  = (NWt(t+1)-NWt(t)) / p.dt(t)  - (r_Ft(t) - p.f_bank) * NWt(t); 
+    end
     
      if opt.GK
         TSt                 = NWt;

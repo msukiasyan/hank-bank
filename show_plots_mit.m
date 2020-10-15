@@ -18,31 +18,31 @@ function show_plots_mit(opt, glob, p, stats, paths, statst)
 %     ylabel('Percent dev.');
 %     title('Value');
 
-    subplot(4, 4, 1);
+    subplot(4, 5, 1);
     plot(p.tgrid(1:26), paths.Kt(1:26) / stats.K * 100 - 100, 'LineWidth', 1.5);
     xlabel('Quarters');
     ylabel('Percent dev.');
     title('Capital');
     
-    subplot(4, 4, 2);
+    subplot(4, 5, 2);
     plot(p.tgrid(1:26), cellfun(@(x) x.Y, statst(1:26)) / statst{p.Nt}.Y * 100 - 100, 'LineWidth', 1.5);
     xlabel('Quarters');
     ylabel('Percent dev.');
     title('Output');
 
-    subplot(4, 4, 3);
+    subplot(4, 5, 3);
     plot(p.tgrid(1:26), paths.x_at(1:26), 'LineWidth', 1.5);
     xlabel('Quarters');
     ylabel('Level');
     title('Leverage');
 
-    subplot(4, 4, 4);
+    subplot(4, 5, 4);
     plot(p.tgrid(1:26), (cellfun(@(x) x.r_minus, statst(1:26)) - stats.r_minus) * 400, 'LineWidth', 1.5);
     xlabel('Quarters');
     ylabel('Percent dev. (annualized)');
     title('Borrowing rate');
 
-    subplot(4, 4, 5);
+    subplot(4, 5, 5);
     plot(p.tgrid(1:26), (cellfun(@(x) x.r_plus, statst(1:26)) - stats.r_plus) * 400, 'LineWidth', 1.5);
     xlabel('Quarters');
     ylabel('Percent dev. (annualized)');
@@ -57,7 +57,7 @@ function show_plots_mit(opt, glob, p, stats, paths, statst)
 %     % ylim([-30 40]);
 %     title('Bank (illiquid) return');
 
-    subplot(4, 4, 6);
+    subplot(4, 5, 6);
     plot(p.tgrid(1:26), cellfun(@(x) x.cons_mean, statst(1:26)) / stats.cons_mean * 100 - 100, ...
         'LineWidth', 1.5);
         %p.tgrid(1:26), cellfun(@(x) x.cons_mean_p, statst(1:26)) / stats.cons_mean_p * 100 - 100, ...
@@ -68,7 +68,7 @@ function show_plots_mit(opt, glob, p, stats, paths, statst)
     ylabel('Percent dev.');
     title('Consumption');
 
-    subplot(4, 4, 7);
+    subplot(4, 5, 7);
     plot(p.tgrid(1:26), cellfun(@(x) x.TD, statst(1:26)) / stats.TD * 100 - 100, ...
         'LineWidth', 1.5);
         %p.tgrid(1:26), cellfun(@(x) x.b_mean_p, statst(1:26)) / stats.b_mean_p * 100 - 100, ...
@@ -80,7 +80,7 @@ function show_plots_mit(opt, glob, p, stats, paths, statst)
     ylabel('Percent dev.');
     title('Liquid Assets');
 
-    subplot(4, 4, 8);
+    subplot(4, 5, 8);
     plot(p.tgrid(1:26), cellfun(@(x) x.NW, statst(1:26)) / stats.NW * 100 - 100, 'LineWidth', 1.5);
     xlabel('Quarters');
     ylabel('Percent dev.');
@@ -89,13 +89,13 @@ function show_plots_mit(opt, glob, p, stats, paths, statst)
 %     figure;
 %     sgtitle('1% capital stock shock, inequality');
 
-    subplot(4, 4, 9);
+    subplot(4, 5, 9);
     plot(p.tgrid(1:26), cellfun(@(x) x.cons_gini, statst(1:26)) / stats.cons_gini * 100 - 100, 'LineWidth', 1.5);
     xlabel('Quarters');
     ylabel('Percent dev.');
     title('Consumption Gini');
     
-    subplot(4, 4, 10);
+    subplot(4, 5, 10);
     plot(p.tgrid(1:26), cellfun(@(x) sqrt(x.cons_var), statst(1:26)) / sqrt(stats.cons_var) * 100 - 100, 'LineWidth', 1.5);
     xlabel('Quarters');
     ylabel('Percent dev.');
@@ -113,7 +113,7 @@ function show_plots_mit(opt, glob, p, stats, paths, statst)
 %     ylabel('Percent dev.');
 %     title('Illiquid Gini');
     
-    subplot(4, 4, 11);
+    subplot(4, 5, 11);
     plot(p.tgrid(1:26), cellfun(@(x) x.total_inc_mean, statst(1:26)) / stats.total_inc_mean * 100 - 100, ...
         'LineWidth', 1.5);
         % p.tgrid(1:26), cellfun(@(x) x.total_inc_mean_p, statst(1:26)) / stats.total_inc_mean_p * 100 - 100, ...
@@ -124,37 +124,44 @@ function show_plots_mit(opt, glob, p, stats, paths, statst)
     ylabel('Percent dev.');
     title('Total income');
     
-    subplot(4, 4, 12);
+    subplot(4, 5, 12);
     plot(p.tgrid(1:26), cellfun(@(x) x.w, statst(1:26)) / stats.w * 100 - 100, ...
         'LineWidth', 1.5);
     xlabel('Quarters');
     ylabel('Percent dev.');
     title('Wage');
     
-        subplot(4, 4, 13);
+        subplot(4, 5, 13);
     plot(p.tgrid(1:26), cellfun(@(x) x.TS, statst(1:26)) / stats.TS * 100 - 100, 'LineWidth', 1.5);
     xlabel('Quarters');
     ylabel('Percent dev.');
     title('Illiquid assets');
     
-        subplot(4, 4, 14);
+        subplot(4, 5, 14);
     plot(p.tgrid(1:26), (cellfun(@(x) x.LIQ_ILLIQ, statst(1:26))  - stats.LIQ_ILLIQ)*100, 'LineWidth', 1.5);
     xlabel('Quarters');
     ylabel('PP deviation');
     title('Liquid/Illiquid ratio');
     
     
-            subplot(4, 4, 15);
+            subplot(4, 5, 15);
     plot(p.tgrid(1:26), cellfun(@(x) x.q, statst(1:26)) / 1 * 100 - 100, 'LineWidth', 1.5);
    xlabel('Quarters');
     ylabel('Percent dev.');
     title('Capital price');
     
-                subplot(4, 4, 16);
+                subplot(4, 5, 16);
     plot(p.tgrid(1:26), cellfun(@(x) x.TD_bank, statst(1:26)) / stats.TD_bank * 100 - 100, 'LineWidth', 1.5);
    xlabel('Quarters');
     ylabel('Percent dev.');
     title('Total deposits');
+    
+                    subplot(4, 5, 17);
+    plot(p.tgrid(1:26), cellfun(@(x) x.Mt, statst(1:26)), 'LineWidth', 1.5);
+   xlabel('Quarters');
+    ylabel('??');
+    title('M');
+    
     
     
     set(findobj(gcf,'type','axes'), 'XGrid', 'on', 'YGrid', 'on');
