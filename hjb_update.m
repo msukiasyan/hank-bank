@@ -36,7 +36,7 @@ function [V1, dFinal, cFinal, h, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     
     % labor supply - easy with GHH
     
-    h                   = ((1 - p.xi) * p.w * p.zzz / p.disutil) .^ p.frisch;
+    h                   = ((1 - p.xi) * p.w * p.zzz / p.disutil) .^ p.varphi;
     lab_income          = p.w * p.zzz .* h;
     
     %% Solve
@@ -70,9 +70,8 @@ function [V1, dFinal, cFinal, h, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     % later
     
    
-    
-    c_B                 = VbB .^ (-1 / p.ga) + p.disutil * 1 / (1 + 1 / p.frisch) * h .^ (1 + 1 / p.frisch);
-    c_F                 = VbF .^ (-1 / p.ga) + p.disutil * 1 / (1 + 1 / p.frisch) * h .^ (1 + 1 / p.frisch);
+    c_B                 = VbB .^ (-1 / p.ga) + p.disutil * 1 / (1 + 1 / p.varphi) * h .^ (1 + 1 / p.varphi);
+    c_F                 = VbF .^ (-1 / p.ga) + p.disutil * 1 / (1 + 1 / p.varphi) * h .^ (1 + 1 / p.varphi);
     
 
     

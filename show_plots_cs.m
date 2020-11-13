@@ -26,7 +26,7 @@ function show_plots_cs(opt, glob, p, cs, stl)
     plot(cs.cs_grid, cellfun(@(x) x.a_mean, cs.cs_stats), stl, 'LineWidth', 1.5)
     xlabel(cs.par);
     ylabel('Total Illiquid Assets');
-    title('Total Illiquid Assets');
+    title('Total Illiquid Assets = NW');
 
     subplot(figure_height, figure_width, 4);
     plot(cs.cs_grid, cellfun(@(x) x.a_gini, cs.cs_stats), stl, 'LineWidth', 1.5)

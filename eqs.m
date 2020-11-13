@@ -26,8 +26,8 @@ function rs = eqs(opt, glob, p, inp)
     wt              = p.dtildea_vec .* p.dtildeb_vec .* p.dist_vec;
     h_vec           = reshape(sol.hpol, p.Nb * p.Na * p.Nz, 1);
     z_vec           = reshape(p.zzz, p.Nb * p.Na * p.Nz, 1);
-    p.N             = sum(wt .* z_vec .* h_vec);   % labor supply
-    p.K             = p.N * p.K_N;        % get capital
+    p.H             = sum(wt .* z_vec .* h_vec);   % labor supply
+    p.K             = p.H * p.K_H;        % get capital
     
     ldist           = cell(p.Nz,1); 
     ildist          = cell(p.Nz,1);
@@ -40,11 +40,11 @@ function rs = eqs(opt, glob, p, inp)
         TS          = TS + trapz(p.a, ildist{nz} .* p.a);              % Total illiquid assets
     end
 
-    NW              = TS / (1 + p.mu_bank * (p.x_a - 1));                                              % Net worth = Illiquid - p.mu_bank * deposits 
+    NW              = TS;                                              % Net worth = Illiquid
     TD_bank         = (p.x_a - 1) * NW ;
 
     rt(1)           = TB - p.x_a * NW + p.K ;
-    rt(2)           = TD - TD_bank * (1 - p.mu_bank);
+    rt(2)           = TD - TD_bank;
     rs              = rt;
     
 

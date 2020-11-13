@@ -17,8 +17,8 @@ function stats = calc_stats(opt, glob, p, s)
     wt              = p.dtildea_vec .* p.dtildeb_vec .* dist_vec;
     wt_array        = reshape(wt, p.Nb, p.Na, p.Nz);
     z_vec           = reshape(p.zzz, p.Nb * p.Na * p.Nz, 1);
-    N               = sum(wt .* z_vec .* h_vec);   % labor supply
-    K               = N * p.K_N;        % get capital
+    H               = sum(wt .* z_vec .* h_vec);   % labor supply
+    K               = H * p.K_H;        % get capital
 
   
     Rb              = p.r_plus .* (p.bbb > 0) + p.r_minus .* (p.bbb < 0);
@@ -147,5 +147,5 @@ function stats = calc_stats(opt, glob, p, s)
     stats.b10       = b10;
     stats.b90       = b90;
     stats.K         = K;
-    stats.N         = N;
+    stats.H         = H;
 end

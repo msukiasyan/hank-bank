@@ -27,7 +27,7 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
     x_at            = agg_paths.x_at;
     r_Ft            = agg_paths.r_Ft;
     wt              = agg_paths.wt;
-    K_Nt            = agg_paths.K_Nt;
+    K_Ht            = agg_paths.K_Ht;
     %% Solve HJB backward
     for t = p.Nt-1:-1:1
         p.r_plus                            = r_plust(t);
@@ -62,7 +62,7 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
         pars.r_plus         = r_plust(t);
         pars.r_minus        = r_minust(t);
         pars.x_a            = x_at(t);
-        pars.K_N            = K_Nt(t);
+        pars.K_H            = K_Ht(t);
     
         if opt.GK
            pars.aaa         = p.aaa * NWt(t);
@@ -75,11 +75,11 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
         TBt(t)              = statst{t}.TB;
         TDt(t)              = statst{t}.TD;
         TDt(t)              = statst{t}.TD;
-%         statst{t}.r_plus    = r_plust(t);
-%         statst{t}.r_minus   = r_minust(t);
-%         statst{t}.r_F       = r_Ft(t);
+        statst{t}.r_plus    = r_plust(t);
+        statst{t}.r_minus   = r_minust(t);
+        statst{t}.r_F       = r_Ft(t);
         statst{t}.w         = wt(t);
-%         statst{t}.spread    = r_minust(t) - r_Xt(t);
+        statst{t}.spread    = r_minust(t) - r_plust(t);
         if opt.GK
             statst{t}.TS    = NWt(t);
         end
