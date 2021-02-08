@@ -25,9 +25,8 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     dt{p.Nt}        = final_ss.dpol;
     qt(p.Nt)        = 1;
     r_minust(p.Nt)  = final_ss.r_minus;
-    
+    x_at =          final_ss.x_a * ones(p.Nt, 1);
     %% Guesses
-    x_at            = guesses.x_at;
     Kt              = guesses.Kt;
     piPt            = guesses.piPt;
     Ht              = guesses.Ht;
@@ -44,8 +43,7 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
         qt(t)       = q_from_iota(opt, glob, p, iotat(t));
     end
     
-    %% eta from leverage
-    etat            = x_at * p.theta_bank;
+ 
 
     %% get output
     Yt                      = p.Aprod .* Kt .^ p.alpha .* Ht .^ (1 - p.alpha);
@@ -55,7 +53,7 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
 
     Ygrowtht      = [(Yt(2:end)-Yt(1:end-1))./(p.dt(1:end).*Yt(2:end));0];
     piPdott       = [(piPt(2:end)-piPt(1:end-1))./p.dt(1:end);0];
-    invmarkupPt   = 1/p.markupP + p.sigP / p.zetaP * ((final_ss.r_plus - 0*Ygrowtht) .* piPt - piPdott);
+    invmarkupPt   = 1/p.markupP + p.sigP / p.zetaP * ((final_ss.r_F - Ygrowtht) .* piPt - piPdott);
 
     %invmarkupPt      = 1/p.markupP + p.sigP / p.zetaP * ((r_plust - Ygrowtht) .* piPt - piPdott);
     markupPt         = 1./invmarkupPt;
@@ -63,17 +61,14 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     mpk             = prod_K(opt, glob, p, Kt, Ht);
     wt              = prod_L(opt, glob, p, Kt, Ht) ./ markupPt;
     for t = 1:p.Nt-1
-        % r_minust(t) = (mpk(t) - iotat(t) + (qt(t + 1) - qt(t)) / p.dt(t)) / qt(t) + Psit(t) - p.delta;
-        r_minust(t) = (mpk(t) / markupPt(t) + (qt(t + 1) - qt(t)) / p.dt(t)) / qt(t) - p.delta;
+         r_minust(t) = (mpk(t) / markupPt(t) - iotat(t) + (qt(t + 1) - qt(t)) / p.dt(t)) / qt(t) + Psit(t) - p.delta;
+        %r_minust(t) = (mpk(t) / markupPt(t) + (qt(t + 1) - qt(t)) / p.dt(t)) / qt(t) - p.delta;
     end
     
-    r_plust1(p.Nt) = final_ss.r_plus;
-    for t = p.Nt-1:-1:1
-        r_plust1(t)  = (r_minust(t) * etat(t) ^ 2 / p.theta_bank - etat(t) * (p.rho_bank + p.f_bank) + p.f_bank + (etat(t + 1) - etat(t)) / p.dt(t)) / (etat(t) ^ 2 / p.theta_bank - etat(t));
-    end
+
   
     %% get inflation implied by r_plust1
-    piPt1 =  (r_plust1' - final_ss.r_plus - p.MP) / (p.R_piP-1);
+    piPt1 =  (r_plust - final_ss.r_plus - p.MP) / (p.R_piP-1);
 
     
     %% Spread
@@ -114,6 +109,8 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
         end
     end
     
+
+    
     %% Calculate the transition and stats
     agg_paths.r_plust       = r_plust;
     agg_paths.r_minust      = r_minust;
@@ -124,13 +121,7 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     
     statst                  = transition_households(opt, glob, p, agg_paths, init_state, final_ss);
     
-    for t = 1:p.Nt
-        statst{t}.r_plusnom = r_plus_nomt(t) ;
-        statst{t}.piP       = piPt(t);
-        statst{t}.q         = qt(t);
-        statst{t}.Y         = Yt(t);
-        statst{t}.I         = iotat(t) * Kt(t);
-    end
+
     
     %% residuals
     TSt                     = arrayfun(@(x) statst{x}.TS, (1:p.Nt)');
@@ -145,13 +136,34 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     Kt1                     = (x_at .* TSt - TBt) ./ qt;
     res.K                   = Kt1 ./ Kt - 1;
     
-    x_at1                   = TDt ./ TSt + 1;
-    res.x_a                 = x_at1 ./ x_at - 1;
+ 
     
 
-    %res.piP                 = %exp(r_plust)./exp( r_plust1') - 1; 
-    res.piP                = piPt1 -piPt; 
+    %res.piP                 = exp(r_plust)./exp( r_plust1') - 1; 
+    %res.piP                =  exp(piPt1)./exp(piPt)-1; 
+    
+    
+    res.piP                =  TDt - (x_at - 1) .* TSt; 
     Ht1                     = arrayfun(@(x) statst{x}.H, (1:p.Nt)');
     res.H                   = Ht1 ./ Ht - 1;
     
+    %% some objects of interest   
+    
+    NWtdott       = [(TSt(2:end)-TSt(1:end-1))./p.dt(1:end);0];
+    inflowt            = NWtdott - (r_Ft) .* TSt;
+    for t = 1:p.Nt
+        statst{t}.r_plusnom = r_plus_nomt(t) ;
+        statst{t}.piP       = piPt(t);
+        statst{t}.q         = qt(t);
+        statst{t}.Y         = Yt(t);
+        statst{t}.I         = iotat(t) * Kt(t);
+        statst{t}.spread    = spreadt(t);
+        statst{t}.markupP   = markupPt(t);
+        statst{t}.inflow    = inflowt(t);
+    end
+    for t = 1:p.Nt-1
+        statst{t}.r_minust_gain = ( + (qt(t + 1) - qt(t)) / p.dt(t)) / qt(t) + Psit(t) - p.delta;
+        statst{t}.r_minust_div  = (mpk(t) / markupPt(t)  - iotat(t)) / qt(t) ;
+    end
+    statst{t}.N_change = N_change;
 end

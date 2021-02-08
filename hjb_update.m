@@ -37,6 +37,7 @@ function [V1, dFinal, cFinal, h, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     % labor supply - easy with GHH
     
     h                   = ((1 - p.xi) * p.w * p.zzz / p.disutil) .^ p.varphi;
+    %h                  = ((1 - p.xi) * p.w  / p.disutil) .^ p.varphi; % everyone provides the same h!
     lab_income          = p.w * p.zzz .* h;
     
     %% Solve

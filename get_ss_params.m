@@ -10,6 +10,7 @@ function pars = get_ss_params(opt, glob, p)
     p.x_a           = p.eta / p.theta_bank;
     p.lambda        = p.eta * (p.r_minus - p.r_plus) / p.theta_bank;
     p.spread        = p.r_minus - p.r_plus;
+
     
     if opt.GK
         p.NW        = p.MGK / (p.f_bank - p.r_F);

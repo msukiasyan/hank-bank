@@ -41,6 +41,7 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
     end
 
     %% Solve KFE forward
+    
     gtilde{1}               = reshape(init_state.gvec .* (p.dtildea_vec .* p.dtildeb_vec), p.Nb * p.Na, p.Nz);
     gt{1}                   = reshape(init_state.gvec, p.Nb, p.Na, p.Nz);
     for t = 1:p.Nt-1
@@ -49,7 +50,7 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
         for nz = 1:p.Nz
             vec             = gtilde{t} * lmat(:, nz);
             B               = (1.0 - p.dt(t) * p.la_mat(nz, nz)) * speye(p.Nb * p.Na) - p.dt(t) * BU{t, nz}';
-
+            statst_temp{t}.B{nz} = B;
             gtilde{t + 1}(:, nz)    = B \ vec;
         end
         gt{t + 1}           = reshape(gtilde{t + 1}, p.Nb * p.Na * p.Nz, 1);
@@ -70,7 +71,14 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
         end
         pars.w              = wt(t);
         
+        
         statst{t}           = calc_stats(opt, glob, pars, struct('dst', gt{t}, 'cpol', ct{t}, 'hpol', ht{t}, 'dpol', dt{t}, 'V', Vt{t}));
+        if t < p.Nt
+            for nz = 1:p.Nz
+            statst{t}.B{nz} = statst_temp{t}.B{nz};
+            end
+        end
+        
         TSt(t)              = statst{t}.TS;
         TBt(t)              = statst{t}.TB;
         TDt(t)              = statst{t}.TD;
@@ -80,9 +88,12 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
         statst{t}.r_F       = r_Ft(t);
         statst{t}.w         = wt(t);
         statst{t}.spread    = r_minust(t) - r_plust(t);
+        statst{t}.cpol      = ct{t};   
+        statst{t}.hpol      = ht{t};       
+        statst{t}.dpol      = dt{t};
         if opt.GK
             statst{t}.TS    = NWt(t);
         end
     end
-    
+  
 end

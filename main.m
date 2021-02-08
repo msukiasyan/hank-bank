@@ -12,10 +12,10 @@ params.sigP         = 6;                    % EoS, goods
 params.markupP      = params.sigP/(params.sigP - 1);
 params.markupW      = params.sigW/(params.sigW - 1);
 params.zetaW        = 100;                  % wage stickiness
-params.zetaP        = 1000;                  % price stickiness
+params.zetaP        = 300;                  % price stickiness
 params.R_piP        = 1.25;                  % Taylor rule repsonse to inflation
 params.varphi       = 1;                    % Frisch elasticity
-params.disutil      = 1;                  % labor disutility parameter
+params.disutil      = 10;                  % labor disutility parameter
 % params.chi0         = 1e5;
 params.chi0         = 0.1; %0.04383;
 params.chi1         = 0.95616994593;
@@ -26,9 +26,9 @@ params.Aprod        = 1.0;
 params.alpha        = 0.33;
 params.delta        = 0.07 / 4;
 params.rho_bank     = -log(0.98); % -log(0.98)
-params.f_bank       = 0.5;
-params.theta_bank   = 0.3;
-params.kappa        = 5;
+params.f_bank       = 0.6;
+params.theta_bank   = 0.6;
+params.kappa        = 2;
 params.mu           = 0.0;                  % fraction of illiquid assets held in "illiquid deposits"
 params.mu_bank      = 0.0;                  % fraction of illiquid deposits in banks' deposits
 % Income process
@@ -54,18 +54,18 @@ params.r_init       = [params.r_minus, params.r_F];
 
 %% Global parameters
 glob                = struct();
-params.acurve       = 1 / 0.15;
-params.bcurve       = 1 / 0.35;
-params.Nb           = 50;
-params.bmin         = 0;
-params.bmax         = 300;
-params.Na           = 40;
+params.acurve       = 1 / 0.15; 
+params.bcurve       = 1 / 0.35; 
+params.Nb           = 50; 
+params.bmin         = 0; 
+params.bmax         = 50; 
+params.Na           = 40; 
 params.amin         = 0;
-params.amax         = 2400;
+params.amax         = 1000;
 params.dtcurve      = 1 / 0.1;
-params.Ndt          = 40;
+params.Ndt          = 30;
 params.dtmin        = 1 / 3;
-params.dtmax        = 250;
+params.dtmax        = 100; 
 
 %% GK (family) parameters
 params.distGK       = "twopoint";
@@ -74,8 +74,8 @@ params.fracGK       = 1.00;          % Fraction of people having bank ownership
 params.MGK          = 0.1;
 
 %% Options
-options.maxit       = 2000;
-options.maxitKFE    = 50000;
+options.maxit       = 5000;
+options.maxitKFE    = 80000;
 options.debug_v     = 1;
 options.debug_eq    = 1;
 options.stepK       = 0.1;
@@ -86,12 +86,12 @@ options.divtoliq    = true;
 
 options.GK          = 0;                         % If 1, must also be that divtoliq == true and chi0 large
 
-options.stepK_nt    = 1e-5;
-options.stepx_a_nt  = 1e-5;
-options.steppiP_nt  = 1e-5;
-options.stepH_nt    = 1e-5;
+options.stepK_nt    = 1e-6;
+options.stepx_a_nt  = 1e-6;
+options.steppiP_nt  = 1e-6;
+options.stepH_nt    = 1e-6;
 options.tol_nt      = 1e-10;
-options.maxittrans_nt   = 100;
+options.maxittrans_nt   = 400;
 options.debug_trans = 1;
 
 %% Setup
@@ -178,13 +178,18 @@ params              = setup(options, glob, params);
 tic;
 [sol, stats]        = find_ss(options, glob, params, [], 1);
 toc;
+
 tic;
 %[paths, statst]     = transition_Ashock_newton(options, glob, params, sol, stats, -0.01, 0.05);
-[paths, statst]     = transition_MPshock_newton(options, glob, params, sol, stats, 0.0025, 0.5);
+[paths, statst]                         = transition_MPshock_newton(options, glob, params, sol, stats, -0.001, 0.7);
+[paths_benchmark, statst_benchmark]     = transition_MPshock_newton(options, glob, params, sol, stats, -0.000, 1);
 
+[statst]            = calc_distr_irf(options, glob, params, statst,statst_benchmark);
 toc;
 
 show_plots_mit(options, glob, params, stats, paths, statst);
+
+show_plots_distributional(options, glob, params, stats, paths, statst);
 
 return
 

@@ -20,6 +20,7 @@ function sol = get_policies(opt, glob, p)
     
     %% labor supply (GHH)
     h           = ((1 - p.xi) * p.w * p.zzz / p.disutil) .^ p.varphi;
+    %h           = ((1 - p.xi) * p.w / p.disutil) .^ p.varphi; % everyone provides the same h!
     lab_income  =  p.w * p.zzz .* h;
     
     %% Initial guess
@@ -67,6 +68,7 @@ function sol = get_policies(opt, glob, p)
             vec             = gmat * lmat(:, nz);
 
             gmatp(:, nz)    = gBu{nz} \ (gBl{nz} \ vec);
+            
         end
         gdist           = max(max(abs(gmatp - gmat)));
         dist(itkfe)     = gdist;

@@ -21,7 +21,7 @@ function [paths, statst]  = transition_Nshock_newton(opt, glob, p, sol, stats, N
     final_ss.NW         = stats.NW;
     final_ss.K          = stats.K;
     final_ss.x_a        = stats.x_a;
-    
+    final_ss.r_F        = stats.r_F;
     if opt.GK
         p.NW                = 1;            % Make sure p.a is not distorted, because we want to 
                                             % lump changes in NW into r_F (more accurate)

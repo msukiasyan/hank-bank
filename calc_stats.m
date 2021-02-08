@@ -73,25 +73,25 @@ function stats = calc_stats(opt, glob, p, s)
     a_marg                  = sum(wt_array, [1, 3]);
     z_marg                  = sum(wt_array, [1, 2]);
     
-    [cons_vec_sorted, ord]  = sort(cons_vec);
+    [cons_vec_sorted, ord_c]  = sort(cons_vec);
     dcons_vec       = 0.5 * [cons_vec_sorted(1); 
                             cons_vec_sorted(3:end) - cons_vec_sorted(1:end - 2); 
                             cons_vec_sorted(end)];
-    cons_marg_cum   = cumsum(wt(ord));
+    cons_marg_cum   = cumsum(wt(ord_c));
     cons_gini       = sum(cons_marg_cum .* (1 - cons_marg_cum) .* dcons_vec) / cons_mean;
     
-    [a_vec_sorted, ord]     = sort(p.afrombaz);
+    [a_vec_sorted, ord_a]     = sort(p.afrombaz);
     da_vec      	= 0.5 * [a_vec_sorted(1); 
                             a_vec_sorted(3:end) - a_vec_sorted(1:end - 2); 
                             a_vec_sorted(end)];
-    a_marg_cum      = cumsum(wt(ord));
+    a_marg_cum      = cumsum(wt(ord_a));
     a_gini          = sum(a_marg_cum .* (1 - a_marg_cum) .* da_vec) / TS;
     
-    [b_vec_sorted, ord]     = sort(p.bfrombaz);
+    [b_vec_sorted, ord_b]     = sort(p.bfrombaz);
     db_vec      	= 0.5 * [b_vec_sorted(1); 
                             b_vec_sorted(3:end) - b_vec_sorted(1:end - 2); 
                             b_vec_sorted(end)];
-    b_marg_cum      = cumsum(wt(ord));
+    b_marg_cum      = cumsum(wt(ord_b));
     b_gini          = sum(b_marg_cum .* (1 - b_marg_cum) .* db_vec) / (TD + TB);
     
     a10             = prctilew(p.a, a_marg, 0.1);
@@ -103,9 +103,37 @@ function stats = calc_stats(opt, glob, p, s)
     b_var           = sum((p.bfrombaz - TD - TB) .^ 2 .* wt);
     a_var           = sum((p.afrombaz - TS) .^ 2 .* wt);
     cons_var        = sum((cons_vec - cons_mean) .^ 2 .* wt);
+    
+    
+%     %% distributional IRFS
+%     % need to align the grid and the distribution closer
+%      [a_percentiles] = prctilew(p.a, a_marg, [0.1 0.25 0.5 0.75 0.99]);
+%      [b_percentiles] = prctilew(p.b, b_marg, [0.1 0.25 0.5 0.75 0.9]);
+%      
+%      [~,ind_a]  = min( abs( p.a'-a_percentiles) );
+%      % doing it in a dumb style
+%     ginit               = zeros(p.Nb, p.Na, p.Nz);
+%     ginit(:,ind_a(1),p.Nz) = 1;
+%     ginit = reshape(ginit, p.Nb * p.Na * p.Nz, 1);
+%     gtilde{1}               = reshape(ginit .* (p.dtildea_vec .* p.dtildeb_vec), p.Nb * p.Na, p.Nz);
+%     gt{1}                   = reshape(ginit, p.Nb, p.Na, p.Nz);
+% 
+%      for t = 1:p.Nt-1
+%             lmat                = eye(p.Nz, p.Nz) + p.dt(t) * p.la_mat_offdiag;
+%         gtilde{t + 1}       = zeros(p.Nb * p.Na, p.Nz);
+%     
+%         for nz = 1:p.Nz
+%             vec             = gtilde{t} * lmat(:, nz);
+%             gtilde{t + 1}(:, nz)    = statst{t}.B{nz} \ vec;
+%         end
+%         gt{t + 1}           = reshape(gtilde{t + 1}, p.Nb * p.Na * p.Nz, 1);
+%         gt{t + 1}           = reshape(gt{t + 1} ./ (p.dtildea_vec .* p.dtildeb_vec), p.Nb, p.Na, p.Nz);
+%     end
+   
 
     %% Pack
     stats           = p;
+    stats.dst       = s.dst;
     for nz = 1:p.Nz
         stats.ldist{nz}     = ldist{nz};
         stats.ildist{nz}    = ildist{nz};
@@ -135,6 +163,9 @@ function stats = calc_stats(opt, glob, p, s)
     stats.total_inc_mean_w  = total_inc_mean_w;
     stats.total_inc_mean_p  = total_inc_mean_p;
     stats.cons_var  = cons_var;
+    stats.a_marg    = a_marg;
+    stats.b_marg    = b_marg;
+    stats.wt        = wt;
     stats.a_var     = a_var;
     stats.b_var     = b_var;
     stats.cons_gini = cons_gini;
@@ -148,4 +179,13 @@ function stats = calc_stats(opt, glob, p, s)
     stats.b90       = b90;
     stats.K         = K;
     stats.H         = H;
+    stats.r_plus    = p.r_plus;
+    stats.r_minus   = p.r_minus;
+    stats.r_F       = p.r_F;
+    stats.inflow    = -(p.r_F) * NW; 
+    stats.r_minus_div   = p.r_minus;
+    stats.r_minus_gain  = 0;
+    stats.cpol          = s.cpol;
+    stats.hpol          = s.hpol;
+    stats.dpol          = s.dpol;
 end
