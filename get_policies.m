@@ -28,7 +28,7 @@ function sol = get_policies(opt, glob, p)
 
     %% Iterate
     for n = 1:opt.maxit
-        [V, dFinal, cFinal, hFinal, u, BU]  = hjb_update(opt, glob, p, v, p.Delta);
+        [V, dFinal, cFinal, hFinal, u, BU, ~ , m, s]  = hjb_update(opt, glob, p, v, p.Delta);
         Vchange                     = V - v;
         v                           = V;
         dist(n)                     = max(max(max(abs(Vchange))));
@@ -96,6 +96,8 @@ function sol = get_policies(opt, glob, p)
     sol.bpol            = (1 - p.xi) * lab_income + Rb .* p.bbb - dFinal - adjustment_cost(dFinal, p.aaa, opt, glob, p) - cFinal;
     sol.sc              = (1 - p.xi) * lab_income + Rb .* p.bbb - cFinal;
     sol.sd              = - dFinal - adjustment_cost(dFinal, p.aaa, opt, glob, p);
+    sol.mpol            = m;
+    sol.spol            = s;
     sol.dst             = g;
     sol.gvec            = g_stacked;
     sol.isvalid         = isvalid;

@@ -5,6 +5,9 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     Vt              = cell(p.Nt, 1);
     ct              = cell(p.Nt, 1);
     dt              = cell(p.Nt, 1);
+    ht              = cell(p.Nt, 1);
+    mt              = cell(p.Nt, 1);
+    st              = cell(p.Nt, 1);
     gt              = cell(p.Nt, 1);
     gtilde          = cell(p.Nt, 1);
     etat            = zeros(p.Nt, 1);
@@ -25,13 +28,16 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     Vt{p.Nt}        = final_ss.V;
     ct{p.Nt}        = final_ss.cpol;
     dt{p.Nt}        = final_ss.dpol;
+    mt{p.Nt}        = final_ss.mpol;
+    st{p.Nt}        = final_ss.spol;
+    ht{p.Nt}        = final_ss.hpol;
     qt(p.Nt)        = 1;
     r_minust(p.Nt)  = final_ss.r_minus;
     
     %% Guesses
     x_at            = guesses.x_at;
     Kt              = guesses.Kt;
-    Nt              = guesses.Nt;
+    Ht              = guesses.Ht;
     %% Investment and capital price
     for t = 1:p.Nt-1
         Psit(t)     = (Kt(t + 1) - Kt(t)) / Kt(t) / p.dt(t) + p.delta;
@@ -49,13 +55,13 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     init_state.gvec     = reshape(init_state.dst, p.Nb * p.Na * p.Nz, 1);
     
     %% Return on capital
-    mpk             = prod_K(opt, glob, p, Kt, Nt);
+    mpk             = prod_K(opt, glob, p, Kt, Ht);
     for t = 1:p.Nt-1
         r_minust(t) = (mpk(t) - iotat(t) + (qt(t + 1) - qt(t)) / p.dt(t)) / qt(t) + Psit(t) - p.delta;
     end
     
     %% Wage from K
-    wt              = prod_L(opt, glob, p, Kt, Nt);
+    wt              = prod_L(opt, glob, p, Kt, Ht);
     
     %% eta from leverage
     etat            = x_at .* p.theta_bank;
@@ -108,21 +114,18 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     agg_paths.r_Xt          = r_Xt;
     agg_paths.wt            = wt;
     agg_paths.x_at          = x_at;
-    agg_paths.K_Nt          = Kt ./ Nt;
+    agg_paths.K_Ht          = Kt ./ Ht;
     statst                  = transition_households(opt, glob, p, agg_paths, init_state, final_ss);
-    Yt                      = p.Aprod .* Kt .^ p.alpha .* Nt .^ (1 - p.alpha);
+    Yt                      = p.Aprod .* Kt .^ p.alpha .* Ht .^ (1 - p.alpha);
     
-    for t = 1:p.Nt
-        statst{t}.q         = qt(t);
-        statst{t}.Y         = Yt(t);
-        statst{t}.I         = Kt(t) * iotat(t);
-    end
+    
+
     
     %% residuals
     TSt                     = arrayfun(@(x) statst{x}.TS, (1:p.Nt)');
     TBt                     = arrayfun(@(x) statst{x}.TB, (1:p.Nt)');
     TDt                     = arrayfun(@(x) statst{x}.TD, (1:p.Nt)');
-    Nt1                     = arrayfun(@(x) statst{x}.N, (1:p.Nt)');
+    Ht1                     = arrayfun(@(x) statst{x}.H, (1:p.Nt)');
     
     NWt              =  TSt ./ (1 + p.mu_bank * (x_at - 1));                                              % Net worth = Illiquid - p.mu_bank * deposits 
     TD_bankt         =  TSt - NWt + TDt ;
@@ -137,6 +140,24 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     x_at1                   = TD_bankt ./ NWt + 1;
     %x_at1                  = TD_bankt ./ TSt + 1;
     res.x_a                 = x_at1 ./ x_at - 1;
-    res.N                   = Nt1 ./ Nt - 1;
+    res.H                   = Ht1 ./ Ht - 1;
+    
+    NWtdott       = [(TSt(2:end)-TSt(1:end-1))./p.dt(1:end);0];
+    inflowt        = NWtdott - (r_Ft) .* TSt;
+  
+    for t = 1:p.Nt
+        statst{t}.q         = qt(t);
+        statst{t}.Y         = Yt(t);
+        statst{t}.I         = Kt(t) * iotat(t);
+        statst{t}.spread    = spreadt(t);
+        statst{t}.inflow    = inflowt(t);
+        
+    end
+    for t = 1:p.Nt-1
+        statst{t}.r_minust_gain = ( + (qt(t + 1) - qt(t)) / p.dt(t)) / qt(t) + Psit(t) - p.delta;
+        statst{t}.r_minust_div  = (mpk(t) - iotat(t)) / qt(t) ;
+    end
+    
+    statst{t}.N_change = N_change;
     
 end

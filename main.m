@@ -16,7 +16,7 @@ params.delta        = 0.07 / 4;
 params.rho_bank     = 0.02;
 params.f_bank       = 0.04;
 params.theta_bank   = 0.6;
-params.kappa        = 0.03;
+params.kappa        = 1;
 params.mu           = 0.0;                  % fraction of illiquid assets held in "illiquid deposits"
 params.mu_bank      = 0.0;                  % fraction of bank deposits being illiquid
 params.disutil      = 6.0;                  % labor disutility parameter
@@ -80,7 +80,7 @@ options.GK          = 0;                         % If 1, must also be that divto
 
 options.stepK_nt    = 1e-4;
 options.stepx_a_nt  = 1e-5;
-options.stepN_nt    = 1e-5;
+options.stepH_nt    = 1e-5;
 options.tol_nt      = 1e-10;
 options.maxittrans_nt   = 140;
 options.debug_trans = 1;
@@ -170,10 +170,14 @@ tic;
 [sol, stats]        = find_ss(options, glob, params, [], 0);
 toc;
 tic;
-[paths, statst]     = transition_Ashock_newton(options, glob, params, sol, stats, -0.01, 0.05);
+[paths, statst]     = transition_Ashock_newton(options, glob, params, sol, stats, -0.01, 0.05,0);
+[paths_benchmark, statst_benchmark]     = transition_Ashock_newton(options, glob, params, sol, stats, -0.01, 0.05,1);
+[statst]            = calc_distr_irf(options, glob, params, statst,statst_benchmark);
+
 toc;
 
 show_plots_mit(options, glob, params, stats, paths, statst);
+show_plots_distributional(options, glob, params, stats, paths, statst);
 
 return
 

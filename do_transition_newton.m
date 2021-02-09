@@ -1,12 +1,15 @@
-function [paths, statst]  = do_transition_newton(opt, glob, p, init_state, final_ss)
+function [paths, statst]  = do_transition_newton(opt, glob, p, init_state, final_ss,noshock)
     guesses0.Kt         = ones(p.Nt, 1) * final_ss.K;
     guesses0.x_at       = ones(p.Nt, 1) * final_ss.x_a;
-    guesses0.Nt         = ones(p.Nt, 1) * final_ss.N;
+    guesses0.Ht         = ones(p.Nt, 1) * final_ss.H;
     % Calculate the jacobian at the steady state (and at the provided paths
     % of exogenous variables)
+    
+    % noshock == 1 means that it's a "fake" transition with 0 shock
+    if noshock == 0;
     jac_for                 = zeros(3 * p.Nt, 3 * p.Nt);
     res_ss                  = transition_residuals(opt, glob, p, guesses0, init_state, final_ss);
-    res_ss_vec              = [res_ss.K; res_ss.x_a; res_ss.N];
+    res_ss_vec              = [res_ss.K; res_ss.x_a; res_ss.H];
     
     % wrt Kt
     for t = 1:p.Nt
@@ -17,7 +20,7 @@ function [paths, statst]  = do_transition_newton(opt, glob, p, init_state, final
         guesses0.Kt(t)      = guesses0.Kt(t) + opt.stepK_nt;
         
         res                 = transition_residuals(opt, glob, p, guesses0, init_state, final_ss);
-        res_vec             = [res.K; res.x_a; res.N];
+        res_vec             = [res.K; res.x_a; res.H];
         jac_for(:, t)       = (res_vec - res_ss_vec) / opt.stepK_nt;
     end
     guesses0.Kt         = ones(p.Nt, 1) * final_ss.K;
@@ -31,7 +34,7 @@ function [paths, statst]  = do_transition_newton(opt, glob, p, init_state, final
         guesses0.x_at(t)    = guesses0.x_at(t) + opt.stepx_a_nt;
         
         res                 = transition_residuals(opt, glob, p, guesses0, init_state, final_ss);
-        res_vec             = [res.K; res.x_a; res.N];
+        res_vec             = [res.K; res.x_a; res.H];
         jac_for(:, p.Nt + t)    = (res_vec - res_ss_vec) / opt.stepx_a_nt;
     end
     guesses0.x_at       = ones(p.Nt, 1) * final_ss.x_a;
@@ -41,21 +44,21 @@ function [paths, statst]  = do_transition_newton(opt, glob, p, init_state, final
         if opt.debug_trans >= 1 && mod(2 * p.Nt + t, 10) == 0
             disp(['Calculating Jacobian: ', int2str(2 * p.Nt + t) '/' num2str(3 * p.Nt)  ]);
         end
-        guesses0.Nt       = ones(p.Nt, 1) * final_ss.N;
-        guesses0.Nt(t)    = guesses0.Nt(t) + opt.stepN_nt;
+        guesses0.Ht       = ones(p.Nt, 1) * final_ss.H;
+        guesses0.Ht(t)    = guesses0.Ht(t) + opt.stepH_nt;
         
         res                 = transition_residuals(opt, glob, p, guesses0, init_state, final_ss);
-        res_vec             = [res.K; res.x_a; res.N];
-        jac_for(:, 2 * p.Nt + t)    = (res_vec - res_ss_vec) / opt.stepN_nt;
+        res_vec             = [res.K; res.x_a; res.H];
+        jac_for(:, 2 * p.Nt + t)    = (res_vec - res_ss_vec) / opt.stepH_nt;
     end
-    guesses0.Nt       = ones(p.Nt, 1) * final_ss.N;
+    guesses0.Ht       = ones(p.Nt, 1) * final_ss.H;
     
     f                       = @(x) transition_residuals(opt, glob, p, x, init_state, final_ss);
     jac_for_inv             = inv(jac_for);
 
-    trans_path              = [ones(p.Nt, 1) * final_ss.K; ones(p.Nt, 1) * final_ss.x_a; ones(p.Nt, 1) * final_ss.N];
-    fval                    = f(struct('Kt', trans_path(1:p.Nt), 'x_at', trans_path(p.Nt+1:2*p.Nt), 'Nt' , trans_path(2*p.Nt+1:3*p.Nt)));
-    fval_vec                = [fval.K; fval.x_a; fval.N];
+    trans_path              = [ones(p.Nt, 1) * final_ss.K; ones(p.Nt, 1) * final_ss.x_a; ones(p.Nt, 1) * final_ss.H];
+    fval                    = f(struct('Kt', trans_path(1:p.Nt), 'x_at', trans_path(p.Nt+1:2*p.Nt), 'Ht' , trans_path(2*p.Nt+1:3*p.Nt)));
+    fval_vec                = [fval.K; fval.x_a; fval.H];
     for it = 1:opt.maxittrans_nt
         fnorm               = norm(fval_vec); 
  
@@ -70,8 +73,8 @@ function [paths, statst]  = do_transition_newton(opt, glob, p, init_state, final
         d                   = -(jac_for_inv * fval_vec);
         trans_path          = trans_path + d;
         fold_vec            = fval_vec;
-        fval                = f(struct('Kt', trans_path(1:p.Nt), 'x_at', trans_path(p.Nt+1:2*p.Nt), 'Nt', trans_path(2*p.Nt+1:3*p.Nt)));
-        fval_vec            = [fval.K; fval.x_a; fval.N];
+        fval                = f(struct('Kt', trans_path(1:p.Nt), 'x_at', trans_path(p.Nt+1:2*p.Nt), 'Ht', trans_path(2*p.Nt+1:3*p.Nt)));
+        fval_vec            = [fval.K; fval.x_a; fval.H];
         lu                  = jac_for_inv * (fval_vec - fold_vec);
         jac_for_inv         = jac_for_inv + ((d - lu) * (d' * jac_for_inv)) / (d' * lu);   
         
@@ -79,5 +82,17 @@ function [paths, statst]  = do_transition_newton(opt, glob, p, init_state, final
     paths.Kt                = trans_path(1:p.Nt);
     paths.x_at              = trans_path(p.Nt+1:2*p.Nt);
     paths.labt              = trans_path(2*p.Nt+1:3*p.Nt);
-    [~, statst]             = f(struct('Kt', trans_path(1:p.Nt), 'x_at', trans_path(p.Nt+1:2*p.Nt),'Nt', trans_path(2*p.Nt+1:3*p.Nt)));
+    [~, statst]             = f(struct('Kt', trans_path(1:p.Nt), 'x_at', trans_path(p.Nt+1:2*p.Nt),'Ht', trans_path(2*p.Nt+1:3*p.Nt)));
+    
+    else
+    % if noshock == 1 it returns no shock counterfactual paths needed to
+    % calculate distributional irfs
+    f                       = @(x) transition_residuals(opt, glob, p, x, init_state, final_ss);    
+    trans_path              = [ones(p.Nt, 1) * final_ss.K; ones(p.Nt, 1) * final_ss.x_a; ones(p.Nt, 1) * final_ss.H];
+    fval                    = f(struct('Kt', trans_path(1:p.Nt), 'x_at', trans_path(p.Nt+1:2*p.Nt), 'Ht' , trans_path(2*p.Nt+1:3*p.Nt)));
+    paths.Kt                = trans_path(1:p.Nt);
+    paths.x_at              = trans_path(p.Nt+1:2*p.Nt);
+    paths.labt              = trans_path(2*p.Nt+1:3*p.Nt);
+    [~, statst]             = f(struct('Kt', trans_path(1:p.Nt), 'x_at', trans_path(p.Nt+1:2*p.Nt),'Ht', trans_path(2*p.Nt+1:3*p.Nt)));
+    end
 end

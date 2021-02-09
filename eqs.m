@@ -26,8 +26,8 @@ function rs = eqs(opt, glob, p, inp)
     wt              = p.dtildea_vec .* p.dtildeb_vec .* p.dist_vec;
     h_vec           = reshape(sol.hpol, p.Nb * p.Na * p.Nz, 1);
     z_vec           = reshape(p.zzz, p.Nb * p.Na * p.Nz, 1);
-    p.N             = sum(wt .* z_vec .* h_vec);   % labor supply
-    p.K             = p.N * p.K_N;        % get capital
+    p.H             = sum(wt .* z_vec .* h_vec);   % labor supply
+    p.K             = p.H * p.K_H;        % get capital
     
     ldist           = cell(p.Nz,1); 
     ildist          = cell(p.Nz,1);
