@@ -103,7 +103,7 @@ function show_plots_distributional(opt, glob, p, stats, paths, statst)
     fig = gcf;
     fig.Position(3) = fig.Position(3) + 250;
 % add legend
-    Lgnd = legend({'0th','10th', '25th', '50th', '75th', '90th','100th'});
+    Lgnd = legend({'0th','10th', '25th', '50th', '75th', '90th','95th'});
     Lgnd.Position(1) = 0.01;
     Lgnd.Position(2) = 0.4;
 

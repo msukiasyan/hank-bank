@@ -54,7 +54,7 @@ params.bmax         = 150;
 params.Na           = 40;
 params.amin         = 0;
 params.amax         = 2000;
-params.dtcurve      = 1 / 0.5;
+params.dtcurve      = 1 / 0.2;
 params.Ndt          = 40;
 params.dtmin        = 1 / 5;
 params.dtmax        = 100;
@@ -171,11 +171,12 @@ tic;
 toc;
 tic;
 [paths, statst]     = transition_Ashock_newton(options, glob, params, sol, stats, -0.01, 0.05,0);
-[paths_benchmark, statst_benchmark]     = transition_Ashock_newton(options, glob, params, sol, stats, -0.01, 0.05,1);
-[statst]            = calc_distr_irf(options, glob, params, statst,statst_benchmark);
+[paths_benchmark, statst_benchmark]     = transition_Ashock_newton(options, glob, params, sol, stats, -0.00, 0.05,0);
+[statst]            = calc_distr_irf(options, glob, params,stats, statst,statst_benchmark,1);
 
 toc;
-
+% seems that it matters whether we solve for the benchmark transition or
+% not!
 show_plots_mit(options, glob, params, stats, paths, statst);
 show_plots_distributional(options, glob, params, stats, paths, statst);
 
