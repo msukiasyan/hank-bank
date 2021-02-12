@@ -64,7 +64,7 @@ function [statst] = calc_distr_irf(opt, glob, p,stats, statst, statst_benchmark,
     labor_inc_pre_vec       = reshape(statst_benchmark{1}.labor_inc, p.Nb * p.Na * p.Nz, 1);
     liq_inc_pre_vec         = reshape(statst_benchmark{1}.liq_inc, p.Nb * p.Na * p.Nz, 1);
     illiq_inc_pre_vec       = reshape(statst_benchmark{1}.illiq_inc, p.Nb * p.Na * p.Nz, 1);
-    disposable_inc_pre_vec        = reshape(statst_benchmark{1}.disposable_inc, p.Nb * p.Na * p.Nz, 1);
+    disp_inc_pre_vec        = reshape(statst_benchmark{1}.disposable_inc, p.Nb * p.Na * p.Nz, 1);
 
 
     
@@ -76,7 +76,7 @@ function [statst] = calc_distr_irf(opt, glob, p,stats, statst, statst_benchmark,
     labor_inc_vec           = reshape(statst{1}.labor_inc, p.Nb * p.Na * p.Nz, 1);
     liq_inc_vec             = reshape(statst{1}.liq_inc, p.Nb * p.Na * p.Nz, 1);
     illiq_inc_vec           = reshape(statst{1}.illiq_inc, p.Nb * p.Na * p.Nz, 1);    
-    disposable_inc_vec      = reshape(statst{1}.disposable_inc, p.Nb * p.Na * p.Nz, 1);
+    disp_inc_vec            = reshape(statst{1}.disposable_inc, p.Nb * p.Na * p.Nz, 1);
  
     ginit_pre_left     =  zeros(p.Nb, p.Na, p.Nz);
      ginit_pre_right    =  zeros(p.Nb, p.Na, p.Nz);
@@ -194,7 +194,7 @@ function [statst] = calc_distr_irf(opt, glob, p,stats, statst, statst_benchmark,
         statst{t+1}.illiq.illiq_inc_irf_percentile(k)     = (sum(wt{t + 1} .* illiq_inc_vec) - sum(wt_pre{t + 1} .* illiq_inc_pre_vec));
         statst{t+1}.illiq.a_irf_percentile(k)             = (sum(wt{t + 1} .* a_vec) - sum(wt_pre{t + 1} .* a_vec)) ;
         statst{t+1}.illiq.b_irf_percentile(k)             = (sum(wt{t + 1} .* b_vec) - sum(wt_pre{t + 1} .* b_vec));
-        statst{t+1}.illiq.disposable_inc_irf_percentile(k)     = (sum(wt{t + 1} .* disposable_inc_vec) - sum(wt_pre{t + 1} .* disposable_inc_pre_vec)) ./ sum(wt_pre{t + 1} .* disposable_inc_pre_vec) * 100;
+        statst{t+1}.illiq.disposable_inc_irf_percentile(k)     = (sum(wt{t + 1} .* disposable_inc_vec) - sum(wt_pre{t + 1} .* disposable_inc_pre_vec)) ./ sum(wt_pre{t + 1} .* disposable_inc_pre_vec) * 100;;
 
     end
     
@@ -374,7 +374,7 @@ function [statst] = calc_distr_irf(opt, glob, p,stats, statst, statst_benchmark,
         labor_inc_pre_vec       = reshape(statst_benchmark{t+1}.labor_inc, p.Nb * p.Na * p.Nz, 1);
         liq_inc_pre_vec         = reshape(statst_benchmark{t+1}.liq_inc, p.Nb * p.Na * p.Nz, 1);
         illiq_inc_pre_vec       = reshape(statst_benchmark{t+1}.illiq_inc, p.Nb * p.Na * p.Nz, 1);
-        disposable_inc_pre_vec      = reshape(statst_benchmark{t+1}.disposable_inc, p.Nb * p.Na * p.Nz, 1);
+        disposable_inc_vec      = reshape(statst{t+1}.disposable_inc, p.Nb * p.Na * p.Nz, 1);
 
         
         statst{t+1}.liq.cons_irf_percentile(k)          = (sum(wt{t + 1} .* cons_vec) - sum(wt_pre{t + 1} .* cons_pre_vec)) ./ sum(wt_pre{t + 1} .* cons_pre_vec) * 100;
@@ -387,7 +387,6 @@ function [statst] = calc_distr_irf(opt, glob, p,stats, statst, statst_benchmark,
         statst{t+1}.liq.illiq_inc_irf_percentile(k)     = (sum(wt{t + 1} .* illiq_inc_vec) - sum(wt_pre{t + 1} .* illiq_inc_pre_vec));
         statst{t+1}.liq.a_irf_percentile(k)             = (sum(wt{t + 1} .* a_vec) - sum(wt_pre{t + 1} .* a_vec)) ;
         statst{t+1}.liq.b_irf_percentile(k)             = (sum(wt{t + 1} .* b_vec) - sum(wt_pre{t + 1} .* b_vec));
-        statst{t+1}.liq.disposable_inc_irf_percentile(k)= (sum(wt{t + 1} .* disposable_inc_vec) - sum(wt_pre{t + 1} .* disposable_inc_pre_vec)) ./sum(wt_pre{t + 1} .* disposable_inc_pre_vec) * 100;
 
     end
     

@@ -47,11 +47,11 @@ params.r_init       = [params.r_minus, params.r_F];
 %% Global parameters
 glob                = struct();
 params.acurve       = 1 / 0.15;
-params.bcurve       = 1 / 0.35;
-params.Nb           = 40;
+params.bcurve       = 1 / 0.25;
+params.Nb           = 50;
 params.bmin         = 0;
 params.bmax         = 150;
-params.Na           = 40;
+params.Na           = 50;
 params.amin         = 0;
 params.amax         = 2000;
 params.dtcurve      = 1 / 0.2;
@@ -173,13 +173,14 @@ tic;
 [paths, statst]     = transition_Ashock_newton(options, glob, params, sol, stats, -0.01, 0.05,0);
 [paths_benchmark, statst_benchmark]     = transition_Ashock_newton(options, glob, params, sol, stats, -0.00, 0.05,0);
 [statst]            = calc_distr_irf(options, glob, params,stats, statst,statst_benchmark,1);
+[distr_response]    = calc_distr_response(options, glob, params,stats, statst,statst_benchmark);
 
 toc;
 % seems that it matters whether we solve for the benchmark transition or
 % not!
 show_plots_mit(options, glob, params, stats, paths, statst);
-show_plots_distributional(options, glob, params, stats, paths, statst);
-
+show_plots_distributional_irf(options, glob, params, stats, paths, statst);
+show_plots_distributional_response(options, glob, params, stats, paths, statst,distr_response);
 return
 
 %% Comparative statics

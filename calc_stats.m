@@ -27,6 +27,7 @@ function stats = calc_stats(opt, glob, p, s)
     total_inc       = reshape(p.w * p.zzz .* s.hpol + Rb .* p.bbb + Ra .* p.aaa, p.Nb * p.Na * p.Nz, 1);
     liq_inc         = reshape( (p.r_plus .* (p.bbb > 0) + p.r_minus .* (p.bbb < 0) ) .* p.bbb, p.Nb * p.Na * p.Nz, 1);
     illiq_inc       = reshape(p.r_F .* p.aaa, p.Nb * p.Na * p.Nz, 1);
+    disposable_inc  = labor_inc + liq_inc + opt.divtoliq * illiq_inc;
     %% Marginal distributions
     for nz = 1:p.Nz
         ldist{nz}       = trapz(p.a, s.dst(:, :, nz), 2);
@@ -167,4 +168,5 @@ function stats = calc_stats(opt, glob, p, s)
     stats.labor_inc     = labor_inc;
     stats.liq_inc       = liq_inc;
     stats.illiq_inc     = illiq_inc;
+    stats.disposable_inc = disposable_inc;
 end
