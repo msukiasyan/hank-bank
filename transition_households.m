@@ -4,6 +4,8 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
     BUt             = cell(p.Nt, p.Nz);
     Vt              = cell(p.Nt, 1);
     ct              = cell(p.Nt, 1);
+    st              = cell(p.Nt, 1);
+    mt              = cell(p.Nt, 1);
     dt              = cell(p.Nt, 1);
     gt              = cell(p.Nt, 1);
     gtilde          = cell(p.Nt, 1);
@@ -20,7 +22,8 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
     ct{p.Nt}        = final_ss.cpol;
     ht{p.Nt}        = final_ss.hpol;
     dt{p.Nt}        = final_ss.dpol;
-    
+    mt{p.Nt}        = final_ss.mpol;
+    st{p.Nt}        = final_ss.spol;
     %% Aggregates
     r_plust         = agg_paths.r_plust;
     r_minust        = agg_paths.r_minust;
@@ -37,7 +40,7 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
            p.r_F    = p.r_F * NWt(t);
         end
         p.w                                 = wt(t);
-        [Vt{t}, dt{t}, ct{t}, ht{t}, ~, BU(t, :)]  = hjb_update(opt, glob, p, Vt{t + 1}, p.dt(t));
+        [Vt{t}, dt{t}, ct{t}, ht{t}, ~, BU(t, :), ~, mt{t}, st{t}]  = hjb_update(opt, glob, p, Vt{t + 1}, p.dt(t));
     end
 
     %% Solve KFE forward
@@ -49,7 +52,7 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
         for nz = 1:p.Nz
             vec             = gtilde{t} * lmat(:, nz);
             B               = (1.0 - p.dt(t) * p.la_mat(nz, nz)) * speye(p.Nb * p.Na) - p.dt(t) * BU{t, nz}';
-
+            statst_temp{t}.B{nz} = B;
             gtilde{t + 1}(:, nz)    = B \ vec;
         end
         gt{t + 1}           = reshape(gtilde{t + 1}, p.Nb * p.Na * p.Nz, 1);
@@ -71,6 +74,12 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
         pars.w              = wt(t);
         
         statst{t}           = calc_stats(opt, glob, pars, struct('dst', gt{t}, 'cpol', ct{t}, 'hpol', ht{t}, 'dpol', dt{t}, 'V', Vt{t}));
+        if t < p.Nt
+            for nz = 1:p.Nz
+            statst{t}.B{nz} = statst_temp{t}.B{nz};
+            end
+        end
+        
         TSt(t)              = statst{t}.TS;
         TBt(t)              = statst{t}.TB;
         TDt(t)              = statst{t}.TD;
@@ -80,6 +89,12 @@ function statst = transition_households(opt, glob, p, agg_paths, init_state, fin
         statst{t}.r_F       = r_Ft(t);
         statst{t}.w         = wt(t);
         statst{t}.spread    = r_minust(t) - r_plust(t);
+        statst{t}.cpol      = ct{t};   
+        statst{t}.hpol      = ht{t};       
+        statst{t}.dpol      = dt{t};
+        statst{t}.mpol      = mt{t};
+        statst{t}.spol      = st{t};
+        statst{t}.spol      = st{t};
         if opt.GK
             statst{t}.TS    = NWt(t);
         end

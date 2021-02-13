@@ -1,5 +1,5 @@
-function [paths, statst]  = transition_MPshock_newton(opt, glob, p, sol, stats, sm, pers, guesses0)
-    if nargin < 8
+function [paths, statst]  = transition_MPshock_newton(opt, glob, p, sol, stats, sm, pers, noshock, guesses0)
+    if nargin < 9
         guesses0.Kt         = ones(p.Nt, 1) * stats.K;
         guesses0.x_at       = repmat(stats.x_a, p.Nt, 1);
         guesses0.piPt       = zeros(p.Nt, 1); % path of inflation

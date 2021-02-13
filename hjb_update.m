@@ -1,4 +1,4 @@
-function [V1, dFinal, cFinal, h, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
+function [V1, dFinal, cFinal, h, u, BU, B, m, s] = hjb_update(opt, glob, p, V, Delta)
     isvalid     = true;
 
     %% Prepare objects
@@ -8,6 +8,8 @@ function [V1, dFinal, cFinal, h, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     VaB         = zeros(p.Nb, p.Na, p.Nz);
     c           = zeros(p.Nb, p.Na, p.Nz);
     h           = zeros(p.Nb, p.Na, p.Nz);
+    m           = zeros(p.Nb, p.Na, p.Nz);
+    s           = zeros(p.Nb, p.Na, p.Nz);
     updiag      = zeros(p.Nb * p.Na, p.Nz);
     lowdiag     = zeros(p.Nb * p.Na, p.Nz);
     centdiag    = zeros(p.Nb * p.Na, p.Nz);
@@ -70,6 +72,7 @@ function [V1, dFinal, cFinal, h, u, BU, B] = hjb_update(opt, glob, p, V, Delta)
     % later
     
    
+    
     c_B                 = VbB .^ (-1 / p.ga) + p.disutil * 1 / (1 + 1 / p.varphi) * h .^ (1 + 1 / p.varphi);
     c_F                 = VbF .^ (-1 / p.ga) + p.disutil * 1 / (1 + 1 / p.varphi) * h .^ (1 + 1 / p.varphi);
     

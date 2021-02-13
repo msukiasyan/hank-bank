@@ -123,15 +123,7 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     agg_paths.K_Ht          = Kt ./ Ht;
     
     statst                  = transition_households(opt, glob, p, agg_paths, init_state, final_ss);
-    
-    for t = 1:p.Nt
-        statst{t}.r_plusnom = r_plus_nomt(t) ;
-        statst{t}.piP       = piPt(t);
-        statst{t}.q         = qt(t);
-        statst{t}.Y         = Yt(t);
-        statst{t}.I         = iotat(t) * Kt(t);
-    end
-    
+
     %% residuals
     TSt                     = arrayfun(@(x) statst{x}.TS, (1:p.Nt)');
     TBt                     = arrayfun(@(x) statst{x}.TB, (1:p.Nt)');
@@ -153,5 +145,24 @@ function [res, statst] = transition_residuals(opt, glob, p, guesses, init_state,
     res.piP                = piPt1 -piPt; 
     Ht1                     = arrayfun(@(x) statst{x}.H, (1:p.Nt)');
     res.H                   = Ht1 ./ Ht - 1;
+
+    NWtdott       = [(TSt(2:end)-TSt(1:end-1))./p.dt(1:end);0];
+    inflowt        = NWtdott - (r_Ft) .* TSt;
+    for t = 1:p.Nt
+        statst{t}.r_plusnom = r_plus_nomt(t) ;
+        statst{t}.piP       = piPt(t);
+        statst{t}.q         = qt(t);
+        statst{t}.Y         = Yt(t);
+        statst{t}.I         = iotat(t) * Kt(t);
+        statst{t}.spread    = spreadt(t);
+        statst{t}.inflow    = inflowt(t);
+    end
+
+    for t = 1:p.Nt-1
+        statst{t}.r_minust_gain = ( + (qt(t + 1) - qt(t)) / p.dt(t)) / qt(t) + Psit(t) - p.delta;
+        statst{t}.r_minust_div  = (mpk(t) - iotat(t)) / qt(t) ;
+    end
+    
+    statst{t}.N_change = N_change;
     
 end

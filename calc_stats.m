@@ -23,8 +23,11 @@ function stats = calc_stats(opt, glob, p, s)
   
     Rb              = p.r_plus .* (p.bbb > 0) + p.r_minus .* (p.bbb < 0);
     Ra              = p.r_F .* ones(p.Nb, p.Na, p.Nz);
+    labor_inc       = reshape(p.w * p.zzz .* s.hpol, p.Nb * p.Na * p.Nz, 1);
     total_inc       = reshape(p.w * p.zzz .* s.hpol + Rb .* p.bbb + Ra .* p.aaa, p.Nb * p.Na * p.Nz, 1);
-    
+    liq_inc         = reshape( (p.r_plus .* (p.bbb > 0) + p.r_minus .* (p.bbb < 0) ) .* p.bbb, p.Nb * p.Na * p.Nz, 1);
+    illiq_inc       = reshape(p.r_F .* p.aaa, p.Nb * p.Na * p.Nz, 1);
+    disposable_inc  = labor_inc + liq_inc + opt.divtoliq * illiq_inc;
     %% Marginal distributions
     for nz = 1:p.Nz
         ldist{nz}       = trapz(p.a, s.dst(:, :, nz), 2);
@@ -106,6 +109,8 @@ function stats = calc_stats(opt, glob, p, s)
 
     %% Pack
     stats           = p;
+    stats.dst       = s.dst;
+
     for nz = 1:p.Nz
         stats.ldist{nz}     = ldist{nz};
         stats.ildist{nz}    = ildist{nz};
@@ -135,6 +140,9 @@ function stats = calc_stats(opt, glob, p, s)
     stats.total_inc_mean_w  = total_inc_mean_w;
     stats.total_inc_mean_p  = total_inc_mean_p;
     stats.cons_var  = cons_var;
+    stats.a_marg    = a_marg;
+    stats.b_marg    = b_marg;
+    stats.wt        = wt;
     stats.a_var     = a_var;
     stats.b_var     = b_var;
     stats.cons_gini = cons_gini;
@@ -148,4 +156,17 @@ function stats = calc_stats(opt, glob, p, s)
     stats.b90       = b90;
     stats.K         = K;
     stats.H         = H;
+    stats.r_plus    = p.r_plus;
+    stats.r_minus   = p.r_minus;
+    stats.r_F       = p.r_F;
+    stats.inflow    = -(p.r_F) * NW; 
+    stats.r_minus_div   = p.r_minus;
+    stats.r_minus_gain  = 0;
+    stats.cpol          = s.cpol;
+    stats.hpol          = s.hpol;
+    stats.dpol          = s.dpol;
+    stats.labor_inc     = labor_inc;
+    stats.liq_inc       = liq_inc;
+    stats.illiq_inc     = illiq_inc;
+    stats.disposable_inc = disposable_inc;
 end

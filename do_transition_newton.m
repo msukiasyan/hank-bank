@@ -1,10 +1,11 @@
-function [paths, statst]  = do_transition_newton(opt, glob, p, init_state, final_ss)
+function [paths, statst]  = do_transition_newton(opt, glob, p, init_state, final_ss,noshock)
     guesses0.Kt         = ones(p.Nt, 1) * final_ss.K;
     guesses0.x_at       = ones(p.Nt, 1) * final_ss.x_a;
     guesses0.piPt       = zeros(p.Nt, 1);
     guesses0.Ht         = ones(p.Nt, 1) * final_ss.H;
     % Calculate the jacobian at the steady state (and at the provided paths
     % of exogenous variables)
+    if noshock == 0;
     jac_for                 = zeros(4 * p.Nt, 4 * p.Nt);
     res_ss                  = transition_residuals(opt, glob, p, guesses0, init_state, final_ss);
     res_ss_vec              = [res_ss.K; res_ss.x_a; res_ss.piP; res_ss.H];
@@ -106,4 +107,18 @@ function [paths, statst]  = do_transition_newton(opt, glob, p, init_state, final
     paths.piPt              = trans_path(2*p.Nt+1:3*p.Nt);
     paths.Ht                = trans_path(3*p.Nt+1:4*p.Nt);
     [~, statst]             = f(struct('Kt', trans_path(1:p.Nt), 'x_at', trans_path(p.Nt+1:2*p.Nt), 'piPt', trans_path(2*p.Nt+1:3*p.Nt),  'Ht', trans_path(3*p.Nt+1:4*p.Nt)));
+    else
+    f                       = @(x) transition_residuals(opt, glob, p, x, init_state, final_ss);
+    trans_path              = [ones(p.Nt, 1) * final_ss.K; ones(p.Nt, 1) * final_ss.x_a; zeros(p.Nt,1); ones(p.Nt, 1) * final_ss.H];
+    fval                    = f(struct('Kt', trans_path(1:p.Nt),...
+                                       'x_at', trans_path(p.Nt+1:2*p.Nt),...
+                                       'piPt', trans_path(2*p.Nt+1:3*p.Nt),...
+                                       'Ht', trans_path(3*p.Nt+1:4*p.Nt)));
+    paths.Kt                = trans_path(1:p.Nt);
+    paths.x_at              = trans_path(p.Nt+1:2*p.Nt);
+    paths.piPt              = trans_path(2*p.Nt+1:3*p.Nt);
+    paths.Ht                = trans_path(3*p.Nt+1:4*p.Nt);
+    [~, statst]             = f(struct('Kt', trans_path(1:p.Nt), 'x_at', trans_path(p.Nt+1:2*p.Nt), 'piPt', trans_path(2*p.Nt+1:3*p.Nt),  'Ht', trans_path(3*p.Nt+1:4*p.Nt)));
+
+
 end

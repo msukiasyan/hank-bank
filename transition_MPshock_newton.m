@@ -1,4 +1,4 @@
-function [paths, statst]  = transition_MPshock_newton(opt, glob, p, sol, stats, sm, pers, guesses0)
+function [paths, statst]  = transition_MPshock_newton(opt, glob, p, sol, stats, sm, pers, noshock, guesses0)
     if nargin < 8
         guesses0.Kt         = ones(p.Nt, 1) * stats.K;
         guesses0.x_at       = repmat(stats.x_a, p.Nt, 1);
@@ -32,6 +32,6 @@ function [paths, statst]  = transition_MPshock_newton(opt, glob, p, sol, stats, 
     end
     
     p.Aprod                 = 1;
-    p.MP                    = sm * exp(-pers * p.tgrid) 
-    [paths, statst]         = do_transition_newton(opt, glob, p, init_state, final_ss);
+    p.MP                    = (1-noshock)* sm * exp(-pers * p.tgrid); 
+    [paths, statst]         = do_transition_newton(opt, glob, p, init_state, final_ss,noshock);
 end
